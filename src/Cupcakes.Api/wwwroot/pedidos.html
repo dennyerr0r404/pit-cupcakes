@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meus pedidos · Cupcakes Gourmet</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <main id="conteudo"><div class="carregando">Carregando…</div></main>
+</div>
+<script src="js/core.js"></script>
+<script>
+(async () => {
+  if (!Sessao.exigir()) return;
+  montarLayout({ titulo: "Meus Pedidos", nav: "pedidos" });
+  const el = $("#conteudo");
+  try {
+    const pedidos = await api("pedidos");
+    if (!pedidos.length) { el.innerHTML = telaVazia("Você ainda não fez nenhum pedido.", "Ver cupcakes", "index.html"); return; }
+    el.innerHTML = pedidos.map(p => `
+      <a class="pedido-card" href="pedido.html?id=${p.id}">
+        <div class="h"><span>Pedido #${p.id}</span><span>${moeda(p.valorTotal)}</span></div>
+        <div class="m">${dataHora(p.dataPedido)} · ${NOMES_TIPO[p.tipoEntrega]} · ${NOMES_PAGTO[p.formaPagamento]}<br>
+          ${p.itens.map(i => `${i.quantidade}× ${esc(i.produto)}`).join(", ")}</div>
+        <div style="margin-top:8px"><span class="pill st-${p.status}">${esc(p.statusRotulo)}</span></div>
+      </a>`).join("");
+  } catch (e) {
+    if (e.status === 401) { Sessao.irParaLogin(); return; }
+    el.innerHTML = telaErro(e);
+  }
+})();
+</script>
+</body>
+</html>

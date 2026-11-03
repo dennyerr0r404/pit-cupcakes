@@ -1,0 +1,8 @@
+bin/
+obj/
+.git/
+**/bin/
+**/obj/
+docs/
+entregas/
+*.md

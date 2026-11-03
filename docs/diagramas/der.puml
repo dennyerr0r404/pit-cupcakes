@@ -1,0 +1,77 @@
+@startuml der
+skinparam dpi 150
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam linetype ortho
+skinparam class {
+  BackgroundColor #FFF7F2
+  BorderColor #3D7D7A
+  ArrowColor #333333
+  HeaderBackgroundColor #DDEEEC
+}
+hide circle
+hide empty members
+
+entity "usuario" as usuario {
+  * id_usuario : INT <<PK>>
+  --
+  * nome : VARCHAR(120)
+  * email : VARCHAR(180) <<UNIQUE>>
+  telefone : VARCHAR(20)
+  * senha_hash : VARCHAR(255)
+  * perfil : VARCHAR(20)
+  * data_cadastro : TIMESTAMPTZ
+}
+
+entity "categoria" as categoria {
+  * id_categoria : INT <<PK>>
+  --
+  * nome : VARCHAR(60) <<UNIQUE>>
+  descricao : VARCHAR(255)
+  * ordem_exibicao : INT
+  * ativo : BOOLEAN
+}
+
+entity "produto" as produto {
+  * id_produto : INT <<PK>>
+  --
+  * id_categoria : INT <<FK>>
+  * nome : VARCHAR(120)
+  descricao : TEXT
+  * preco : NUMERIC(10,2)
+  * quantidade_estoque : INT
+  imagem_url : VARCHAR(255)
+  * ativo : BOOLEAN
+  * data_cadastro : TIMESTAMPTZ
+}
+
+entity "pedido" as pedido {
+  * id_pedido : INT <<PK>>
+  --
+  * id_usuario : INT <<FK>>
+  * data_pedido : TIMESTAMPTZ
+  * data_atualizacao : TIMESTAMPTZ
+  * status : VARCHAR(30)
+  * valor_total : NUMERIC(10,2)
+  * tipo_entrega : VARCHAR(20)
+  endereco_entrega : VARCHAR(255)
+  * forma_pagamento : VARCHAR(20)
+  observacao : VARCHAR(255)
+}
+
+entity "item_pedido" as item_pedido {
+  * id_item : INT <<PK>>
+  --
+  * id_pedido : INT <<FK>>
+  * id_produto : INT <<FK>>
+  * quantidade : INT
+  * preco_unitario : NUMERIC(10,2)
+  subtotal : NUMERIC(10,2) <<calculado>>
+}
+
+usuario ||--o{ pedido
+pedido ||--|{ item_pedido
+produto ||--o{ item_pedido
+categoria ||--o{ produto
+@enduml

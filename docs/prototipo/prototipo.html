@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Protótipo - Cupcakes Gourmet</title>
+<style>
+  :root{
+    --teal:#2F8F8B; --teal-dk:#24706D; --teal-lt:#DDEFEE;
+    --cream:#FFF6EE; --pink:#F9E1E3; --ink:#2B2B2B; --muted:#6F6A66;
+    --line:#EADFD6; --ok:#2BAE66; --warn:#E39B2D; --err:#C9443B;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Arial,Helvetica,sans-serif;background:#8FB3AF;color:var(--ink);padding:28px}
+  .row{display:flex;gap:28px;justify-content:center;margin-bottom:28px}
+  .wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .cap{font-weight:bold;color:#fff;font-size:15px;letter-spacing:.3px}
+  .phone{width:340px;height:700px;background:var(--cream);border-radius:26px;overflow:hidden;
+         display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(0,0,0,.18);position:relative}
+  .sb{height:30px;display:flex;justify-content:space-between;align-items:center;padding:0 20px;font-size:12px;font-weight:bold;background:inherit}
+  .top{background:var(--pink);height:52px;display:flex;align-items:center;padding:0 16px;gap:12px;font-size:18px;font-weight:bold}
+  .top .t{flex:1;text-align:center}
+  .ic{width:22px;height:22px;display:inline-block}
+  .body{flex:1;overflow:hidden;padding:14px 16px}
+  .btn{background:var(--teal);color:#fff;border:none;border-radius:24px;height:46px;width:100%;font-size:17px;font-weight:bold}
+  .btn.sec{background:#fff;color:var(--teal);border:2px solid var(--teal)}
+  .price{font-weight:bold;white-space:nowrap}
+  .row{padding:4px 0 6px}
+  .banner{background:var(--teal-lt);border-radius:14px;padding:14px;text-align:center;font-size:20px;font-weight:bold;line-height:1.25}
+  .banner small{display:block;font-size:12px;font-weight:normal;color:var(--muted);margin-top:4px}
+  .tabs{display:flex;gap:18px;margin:14px 0 12px;font-size:15px;color:var(--muted)}
+  .tabs .on{color:var(--ink);font-weight:bold;border-bottom:3px solid var(--teal);padding-bottom:4px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .card{background:#fff;border-radius:14px;padding:8px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .card .img{background:#F6EEE8;border-radius:10px;height:104px;display:flex;align-items:center;justify-content:center}
+  .card .n{font-size:14px;font-weight:bold;margin:7px 2px 4px}
+  .card .f{gap:6px;display:flex;justify-content:space-between;align-items:center;margin:0 2px}
+  .plus{width:28px;height:28px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold}
+  .tag{font-size:10px;padding:2px 6px;border-radius:9px;background:var(--teal-lt);color:var(--teal-dk);font-weight:bold}
+  .tag.out{background:#F4DCDA;color:var(--err)}
+  .nav{height:58px;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;background:#fff;font-size:12px;color:var(--muted)}
+  .nav div{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .nav .on{color:var(--teal);font-weight:bold}
+  .badge{position:absolute;top:-4px;right:-9px;background:var(--err);color:#fff;font-size:10px;border-radius:9px;padding:1px 5px;font-weight:bold}
+  .qty{display:flex;align-items:center;gap:10px}
+  .qb{width:30px;height:30px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold}
+  .qb.dis{background:#C9DEDC}
+  .item{background:#fff;border-radius:14px;padding:10px;display:flex;gap:10px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+  .item .img{width:72px;height:72px;background:#F6EEE8;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+  .item .info{flex:1;display:flex;flex-direction:column;justify-content:space-between}
+  .item .l1{display:flex;justify-content:space-between;font-weight:bold;font-size:15px}
+  .item .l2{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
+  .sum{border-top:1px dashed var(--line);padding-top:10px;margin-top:4px;font-size:14px}
+  .sum div{display:flex;justify-content:space-between;margin-bottom:6px}
+  .sum .tot{font-size:19px;font-weight:bold;margin-top:6px}
+  .note{font-size:12px;color:var(--muted);background:#fff;border-radius:10px;padding:8px 10px;border-left:4px solid var(--teal);line-height:1.35}
+  label{display:block;font-size:13px;font-weight:bold;margin:12px 0 6px}
+  .seg{display:flex;background:#fff;border-radius:22px;border:2px solid var(--teal);overflow:hidden}
+  .seg div{flex:1;text-align:center;padding:9px 0;font-size:14px;font-weight:bold;color:var(--teal)}
+  .seg .on{background:var(--teal);color:#fff}
+  .inp{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:10px;font-size:14px}
+  .inp.err{border-color:var(--err)}
+  .msg-err{color:var(--err);font-size:12px;margin-top:4px}
+  .radio{display:flex;gap:8px}
+  .radio div{flex:1;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:9px 0;text-align:center;font-size:13px}
+  .radio .on{border:2px solid var(--teal);color:var(--teal-dk);font-weight:bold;background:var(--teal-lt)}
+  .steps{margin:8px 0 0 6px}
+  .st{display:flex;gap:14px;align-items:flex-start;position:relative;padding-bottom:26px}
+  .st:not(:last-child)::after{content:"";position:absolute;left:17px;top:38px;width:3px;height:calc(100% - 40px);background:#D8D2CC}
+  .st.done::after{background:var(--ok)!important}
+  .dot{width:37px;height:37px;border-radius:50%;background:#D8D2CC;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;flex:none}
+  .st.done .dot{background:var(--ok)}
+  .st.now .dot{background:var(--teal);box-shadow:0 0 0 6px rgba(47,143,139,.22)}
+  .st .tx b{display:block;font-size:16px}
+  .st .tx span{font-size:12px;color:var(--muted)}
+  .st.wait .tx b{color:var(--muted);font-weight:normal}
+  .ord{background:#fff;border-radius:12px;padding:11px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);font-size:13px}
+  .ord .h{display:flex;justify-content:space-between;font-weight:bold;font-size:15px;margin-bottom:4px}
+  .ord .m{color:var(--muted);margin-bottom:8px;line-height:1.4}
+  .sel{display:flex;justify-content:space-between;align-items:center;border:1.5px solid var(--teal);border-radius:9px;padding:7px 10px;color:var(--teal-dk);font-weight:bold}
+  .pill{font-size:11px;font-weight:bold;padding:3px 8px;border-radius:10px}
+  .p-rec{background:#E8E3F6;color:#5A48A8}.p-pre{background:#FCEBD3;color:#A86412}.p-sai{background:#DCEAF8;color:#2B66A3}.p-ok{background:#DDF3E6;color:#1E7D48}
+  .toast{background:#DDF3E6;color:#1E7D48;border-radius:10px;padding:9px 11px;font-size:13px;font-weight:bold;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="row" id="r1"></div>
+<div class="row" id="r2"></div>
+
+<script>
+// Ilustração simples de cupcake (SVG) - cores por sabor
+function cup(massa, cobertura, granulado, tam=90){
+  const g = granulado ? [[34,26],[50,20],[62,30],[44,36],[28,38],[58,40]].map(([x,y],i)=>
+    `<rect x="${x}" y="${y}" width="6" height="2.6" rx="1.3" fill="${granulado[i%granulado.length]}" transform="rotate(${i*37} ${x} ${y})"/>`).join('') : '';
+  return `<svg width="${tam}" height="${tam}" viewBox="0 0 96 96">
+    <path d="M22 54 L74 54 L66 88 L30 88 Z" fill="${massa}"/>
+    ${[30,38,46,54,62,70].map(x=>`<line x1="${x}" y1="55" x2="${x-(x-48)*0.2}" y2="87" stroke="rgba(0,0,0,.18)" stroke-width="2"/>`).join('')}
+    <ellipse cx="48" cy="52" rx="30" ry="9" fill="${cobertura}"/>
+    <path d="M20 52 Q18 36 34 34 Q34 18 50 16 Q66 16 64 32 Q80 34 76 52 Z" fill="${cobertura}"/>
+    <path d="M30 40 Q40 46 52 40 Q62 34 70 42" stroke="rgba(0,0,0,.08)" stroke-width="3" fill="none"/>
+    <circle cx="50" cy="13" r="5" fill="#C93C4A"/>
+    ${g}</svg>`;
+}
+const P = {
+  velvet:   ["Velvet Red", 12, cup("#A3242F","#FBF3E6",["#D9434F"])],
+  choco:    ["Chocolate Belga", 12, cup("#4A2C22","#6B3A26",["#F3E1C8"])],
+  baunilha: ["Baunilha Clássico", 10, cup("#E9C98F","#FFF1F4",["#E85D8C","#4BA3D9","#F2C230"])],
+  pistache: ["Pistache", 16, cup("#E9C98F","#B9CF8A",["#7C9A45"])],
+};
+const brl = v => "R$ " + Number(v).toFixed(2).replace(".", ",");
+const ICON = {
+  back:`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="#2B2B2B" stroke-width="2.4"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>`,
+  cart:(c="#2B2B2B")=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2"><path d="M3 4h2l2.4 11h10.4L20 8H7"/><circle cx="9" cy="19" r="1.6"/><circle cx="17" cy="19" r="1.6"/></svg>`,
+  home:(c)=>`<svg class="ic" viewBox="0 0 24 24" fill="${c}"><path d="M12 3l9 8h-3v9h-5v-6h-2v6H6v-9H3z"/></svg>`,
+  user:(c)=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>`,
+  list:(c)=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="2"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>`,
+};
+const sb = `<div class="sb"><span>09:41</span><span>▂▄▆ ◉ ▮</span></div>`;
+function nav(on, qtd){
+  const it=(k,ic,txt)=>`<div class="${on===k?'on':''}">${ic(on===k?'#2F8F8B':'#6F6A66')}${txt}</div>`;
+  return `<div class="nav">${it('home',ICON.home,'Início')}
+   <div class="${on==='cart'?'on':''}" style="position:relative">${ICON.cart(on==='cart'?'#2F8F8B':'#6F6A66')}${qtd?`<span class="badge">${qtd}</span>`:''}Carrinho</div>
+   ${it('ped',ICON.list,'Pedidos')}${it('perfil',ICON.user,'Perfil')}</div>`;
+}
+const phone = (cap, html) => `<div class="wrap"><div class="cap">${cap}</div><div class="phone">${html}</div></div>`;
+
+// 1. Catálogo
+const card = (k, esgot) => `<div class="card"><div class="img">${P[k][2]}</div><div class="n">${P[k][0]}</div>
+  <div class="f"><span class="price">${brl(P[k][1])}</span>${esgot?'<span class="tag out">Esgotado</span>':'<span class="plus">+</span>'}</div></div>`;
+const t1 = sb + `<div class="body">
+  <div class="banner">Cupcakes Gourmet<small>Feitos no dia · entrega ou retirada na loja</small></div>
+  <div class="tabs"><span>Todos</span><span class="on">Tradicionais</span><span>Veganos</span><span>Especiais</span></div>
+  <div class="grid">${card('velvet')}${card('choco')}${card('baunilha',true)}</div>
+  </div>` + nav('home', 3);
+
+// 2. Detalhes
+const t2 = sb + `<div class="top">${ICON.back}<span class="t">Detalhes do Produto</span>${ICON.cart()}</div>
+  <div class="body">
+   <div style="background:#F6EEE8;border-radius:16px;height:230px;display:flex;align-items:center;justify-content:center">${cup("#A3242F","#FBF3E6",["#D9434F"],200)}</div>
+   <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 6px"><b style="font-size:24px">Velvet Red</b><span class="tag">Tradicionais</span></div>
+   <p style="font-size:15px;color:#4A4542;line-height:1.4">Massa fofinha de baunilha com toque de cacau e cobertura de cream cheese.</p>
+   <p style="font-size:13px;color:#1E7D48;margin-top:8px;font-weight:bold">● Disponível · 30 unidades</p>
+   <div style="display:flex;justify-content:space-between;align-items:center;margin:20px 0 18px">
+     <span style="font-size:26px;font-weight:bold">${brl(12)}</span>
+     <div class="qty"><span class="qb">−</span><b style="font-size:18px">2</b><span class="qb">+</span></div></div>
+   <button class="btn">Adicionar ao carrinho · ${brl(24)}</button>
+  </div>`;
+
+// 3. Carrinho
+const item = (k,q) => `<div class="item"><div class="img">${cup(...({velvet:["#A3242F","#FBF3E6",["#D9434F"]],choco:["#4A2C22","#6B3A26",["#F3E1C8"]]})[k],62)}</div>
+  <div class="info"><div class="l1"><span>${P[k][0]}</span><span style="color:#999;font-weight:normal">✕</span></div>
+  <div class="l2"><span>${brl(P[k][1])} cada</span><div class="qty"><span class="qb ${q===1?'dis':''}" style="width:26px;height:26px;font-size:17px">−</span><b style="color:#2B2B2B">${q}</b><span class="qb" style="width:26px;height:26px;font-size:17px">+</span></div></div>
+  <div class="l2"><span>Subtotal</span><b style="color:#2B2B2B">${brl(P[k][1]*q)}</b></div></div></div>`;
+const t3 = sb + `<div class="top">${ICON.back}<span class="t">Carrinho</span><span class="ic"></span></div>
+  <div class="body" style="display:flex;flex-direction:column">
+   ${item('velvet',2)}${item('choco',1)}
+   <div style="flex:1"></div>
+   <div class="sum"><div><span>Itens (3)</span><span>${brl(36)}</span></div>
+     <div class="tot"><span>Total</span><span>${brl(36)}</span></div></div>
+   <p class="note" style="margin:8px 0 12px">O valor final é conferido pelo sistema ao confirmar o pedido.</p>
+   <button class="btn">Continuar</button>
+  </div>` + nav('cart', 3);
+
+// 4. Finalização
+const t4 = sb + `<div class="top">${ICON.back}<span class="t">Finalizar Pedido</span><span class="ic"></span></div>
+  <div class="body">
+   <div class="note">Pedido de <b>Cliente de Teste</b> · cliente@teste.com</div>
+   <label>Como deseja receber?</label>
+   <div class="seg"><div class="on">Entrega</div><div>Retirada na loja</div></div>
+   <label>Endereço de entrega *</label>
+   <div class="inp err" style="color:#AAA">Rua, número, bairro</div>
+   <div class="msg-err">Informe o endereço para pedidos com entrega.</div>
+   <label>Forma de pagamento (na entrega)</label>
+   <div class="radio"><div class="on">PIX</div><div>Dinheiro</div><div>Cartão</div></div>
+   <label>Observação (opcional)</label>
+   <div class="inp" style="color:#AAA;height:46px">Ex.: tocar o interfone</div>
+   <div class="sum" style="margin-top:14px"><div><span>Velvet Red × 2</span><span>${brl(24)}</span></div>
+     <div><span>Chocolate Belga × 1</span><span>${brl(12)}</span></div>
+     <div class="tot"><span>Total</span><span>${brl(36)}</span></div></div>
+   <button class="btn" style="margin-top:6px">Confirmar pedido</button>
+  </div>`;
+
+// 5. Status
+const st = (cls, ico, t, s) => `<div class="st ${cls}"><div class="dot">${ico}</div><div class="tx"><b>${t}</b><span>${s}</span></div></div>`;
+const t5 = sb + `<div class="top">${ICON.back}<span class="t">Status do Pedido</span><span class="ic"></span></div>
+  <div class="body">
+   <div class="toast">✓ Pedido confirmado! Número #1024</div>
+   <div style="display:flex;justify-content:space-between;font-size:13px;color:#6F6A66;margin-bottom:12px"><span>21/10/2026 · 10:15</span><span>Entrega · PIX</span></div>
+   <div class="steps">
+    ${st('done','✓','Pedido recebido','10:15')}
+    ${st('now','●','Em preparo','Atualizado às 10:32')}
+    ${st('wait','3','Saiu para entrega','')}
+    ${st('wait','4','Entregue','')}
+   </div>
+   <div class="sum"><div><span>Velvet Red × 2</span><span>${brl(24)}</span></div>
+     <div><span>Chocolate Belga × 1</span><span>${brl(12)}</span></div>
+     <div class="tot"><span>Total a pagar na entrega</span><span>${brl(36)}</span></div></div>
+  </div>` + nav('ped', 0);
+
+// 6. Administração
+const ord = (n, cli, info, tot, pill, cls) => `<div class="ord"><div class="h"><span>#${n} · ${cli}</span><span>${brl(tot)}</span></div>
+  <div class="m">${info}</div><div class="sel"><span class="pill ${cls}">${pill}</span><span>Alterar status ▾</span></div></div>`;
+const t6 = sb + `<div class="top" style="background:#DDEFEE"><span class="t">Painel do Administrador</span></div>
+  <div class="body">
+   <div class="tabs" style="margin-top:0"><span class="on">Pedidos</span><span>Produtos</span><span>Sair</span></div>
+   <div class="tabs" style="margin:-4px 0 12px;font-size:13px;gap:8px"><span class="tag">Abertos (3)</span><span class="tag" style="background:#fff;color:#6F6A66">Concluídos</span></div>
+   ${ord(1024,'Cliente de Teste','Entrega · PIX · 3 itens<br>Rua das Flores, 100','36','Em preparo','p-pre')}
+   ${ord(1023,'Ana Souza','Retirada · Dinheiro · 6 itens','78','Recebido','p-rec')}
+   ${ord(1021,'Carlos Lima','Entrega · Cartão · 2 itens<br>Av. Brasil, 2500','28','Saiu para entrega','p-sai')}
+  </div>`;
+
+document.getElementById('r1').innerHTML = phone('1. Catálogo', t1) + phone('2. Detalhes do produto', t2) + phone('3. Carrinho', t3);
+document.getElementById('r2').innerHTML = phone('4. Finalização do pedido', t4) + phone('5. Status do pedido', t5) + phone('6. Administração', t6);
+</script>
+</body>
+</html>

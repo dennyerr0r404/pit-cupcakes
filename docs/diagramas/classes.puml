@@ -1,0 +1,109 @@
+@startuml classes
+skinparam dpi 150
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor #FFF7F2
+  BorderColor #3D7D7A
+  ArrowColor #333333
+  HeaderBackgroundColor #DDEEEC
+}
+hide circle
+hide empty members
+
+class Usuario {
+  - idUsuario: int
+  - nome: string
+  - email: string
+  - telefone: string
+  - senhaHash: string
+  - perfil: PerfilUsuario
+  - dataCadastro: DateTime
+  --
+  + verificarSenha(senha: string): bool
+  + ehAdministrador(): bool
+}
+
+class Categoria {
+  - idCategoria: int
+  - nome: string
+  - descricao: string
+  - ordemExibicao: int
+  - ativo: bool
+}
+
+class Produto {
+  - idProduto: int
+  - nome: string
+  - descricao: string
+  - preco: decimal
+  - quantidadeEstoque: int
+  - imagemUrl: string
+  - ativo: bool
+  - dataCadastro: DateTime
+  --
+  + estaDisponivel(quantidade: int): bool
+  + baixarEstoque(quantidade: int): void
+}
+
+class Pedido {
+  - idPedido: int
+  - dataPedido: DateTime
+  - dataAtualizacao: DateTime
+  - status: StatusPedido
+  - valorTotal: decimal
+  - tipoEntrega: TipoEntrega
+  - enderecoEntrega: string
+  - formaPagamento: FormaPagamento
+  - observacao: string
+  --
+  + adicionarItem(produto: Produto, quantidade: int): void
+  + calcularTotal(): decimal
+  + atualizarStatus(novo: StatusPedido): void
+}
+
+class ItemPedido {
+  - idItem: int
+  - quantidade: int
+  - precoUnitario: decimal
+  --
+  + calcularSubtotal(): decimal
+}
+
+enum PerfilUsuario {
+  CLIENTE
+  ADMIN
+}
+
+enum StatusPedido {
+  RECEBIDO
+  EM_PREPARO
+  PRONTO_PARA_RETIRADA
+  SAIU_PARA_ENTREGA
+  ENTREGUE
+  CANCELADO
+}
+
+enum TipoEntrega {
+  ENTREGA
+  RETIRADA
+}
+
+enum FormaPagamento {
+  DINHEIRO
+  PIX
+  CARTAO
+}
+
+Usuario "1" -- "0..*" Pedido : realiza >
+Pedido "1" *-- "1..*" ItemPedido : contém >
+Produto "1" -- "0..*" ItemPedido : é vendido em >
+Categoria "1" -- "0..*" Produto : agrupa >
+
+Usuario ..> PerfilUsuario
+Pedido ..> StatusPedido
+Pedido ..> TipoEntrega
+Pedido ..> FormaPagamento
+@enduml

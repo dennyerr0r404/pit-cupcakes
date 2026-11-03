@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Status do pedido · Cupcakes Gourmet</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <main id="conteudo"><div class="carregando">Carregando…</div></main>
+</div>
+<script src="js/core.js"></script>
+<script>
+(async () => {
+  if (!Sessao.exigir()) return;
+  montarLayout({ titulo: "Status do Pedido", voltar: "pedidos.html", nav: "pedidos" });
+  const el = $("#conteudo");
+  const id = Number(params.get("id"));
+
+  async function carregar() {
+    try {
+      const p = await api(`pedidos/${id}`);
+      const novo = params.get("novo") === "1";
+      const aberto = !["ENTREGUE", "CANCELADO"].includes(p.status);
+      el.innerHTML = `
+        ${novo ? `<div class="aviso ok" role="status">✓ Pedido confirmado! Número #${p.id}</div>` : `<h2 style="font-size:18px;margin-bottom:6px">Pedido #${p.id}</h2>`}
+        <div class="meta"><span>${dataHora(p.dataPedido)}</span><span>${NOMES_TIPO[p.tipoEntrega]} · ${NOMES_PAGTO[p.formaPagamento]}</span></div>
+        <div class="linha-tempo">
+          ${p.etapas.map((e, i) => `
+            <div class="etapa ${e.concluida ? "feita" : ""} ${e.atual ? "atual" : ""} ${e.status === "CANCELADO" ? "cancelado" : ""}">
+              <div class="ponto">${e.status === "CANCELADO" ? "✕" : e.concluida && !e.atual ? "✓" : e.atual ? "●" : i + 1}</div>
+              <div class="tx"><b>${esc(e.rotulo)}</b><span>${
+                i === 0 ? hora(p.dataPedido) : e.atual ? "Atualizado às " + hora(p.dataAtualizacao) : ""}</span></div>
+            </div>`).join("")}
+        </div>
+        ${p.enderecoEntrega ? `<p class="nota" style="margin-bottom:12px"><b>Entregar em:</b> ${esc(p.enderecoEntrega)}</p>` : ""}
+        ${p.tipoEntrega === "RETIRADA" && aberto ? `<p class="nota" style="margin-bottom:12px">Retire na loja quando o status for <b>Pronto para retirada</b>.</p>` : ""}
+        ${p.observacao ? `<p class="nota" style="margin-bottom:12px"><b>Observação:</b> ${esc(p.observacao)}</p>` : ""}
+        <div class="resumo">
+          ${p.itens.map(i => `<div><span>${esc(i.produto)} × ${i.quantidade}</span><span>${moeda(i.subtotal)}</span></div>`).join("")}
+          <div class="total"><span>${p.status === "CANCELADO" ? "Total" : aberto ? `Total a pagar na ${p.tipoEntrega === "ENTREGA" ? "entrega" : "retirada"}` : "Total pago"}</span><span>${moeda(p.valorTotal)}</span></div>
+        </div>
+        ${aberto ? '<button class="btn sec" id="atualizar" type="button" style="margin-top:12px">Atualizar status</button>' : ""}
+        <a class="btn" href="index.html" style="margin-top:10px">Continuar comprando</a>`;
+      $("#atualizar")?.addEventListener("click", () => { carregar(); toast("Status atualizado"); });
+    } catch (e) {
+      if (e.status === 401) { Sessao.irParaLogin(); return; }
+      el.innerHTML = telaErro(e) + telaVazia("", "Ver meus pedidos", "pedidos.html");
+    }
+  }
+  carregar();
+})();
+</script>
+</body>
+</html>

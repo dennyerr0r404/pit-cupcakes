@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" font-family="Arial, Helvetica, sans-serif">
+<defs><marker id="seta" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#222" stroke-width="1.6"/></marker></defs>
+<rect width="1200" height="900" fill="#fff"/>
+<rect x="260" y="70" width="700" height="805" fill="none" stroke="#3D7D7A" stroke-width="2.5"/>
+<text x="610" y="105" text-anchor="middle" font-size="21" font-weight="bold" fill="#222">Sistema de Vendas de Cupcakes</text>
+<line x1="140" y1="406" x2="305.0" y2="140.0" stroke="#222" stroke-width="1.6"/>
+<line x1="140" y1="406" x2="305.0" y2="225.0" stroke="#222" stroke-width="1.6"/>
+<line x1="140" y1="406" x2="305.0" y2="310.0" stroke="#222" stroke-width="1.6"/>
+<line x1="140" y1="406" x2="305.0" y2="395.0" stroke="#222" stroke-width="1.6"/>
+<line x1="140" y1="406" x2="305.0" y2="480.0" stroke="#222" stroke-width="1.6"/>
+<line x1="140" y1="406" x2="305.0" y2="565.0" stroke="#222" stroke-width="1.6"/>
+<line x1="140" y1="406" x2="315.0" y2="655.0" stroke="#222" stroke-width="1.6"/>
+<line x1="1060" y1="746" x2="525.0" y2="655.0" stroke="#222" stroke-width="1.6"/>
+<line x1="1060" y1="746" x2="905.0" y2="745.0" stroke="#222" stroke-width="1.6"/>
+<line x1="1060" y1="746" x2="905.0" y2="825.0" stroke="#222" stroke-width="1.6"/>
+<line x1="675.0" y1="225.0" x2="535.0" y2="225.0" stroke="#222" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#seta)"/>
+<text x="605" y="215" text-anchor="middle" font-size="16" fill="#222">«extend»</text>
+<line x1="535.0" y1="480.0" x2="665.0" y2="480.0" stroke="#222" stroke-width="1.6" stroke-dasharray="8 6" marker-end="url(#seta)"/>
+<text x="600" y="470" text-anchor="middle" font-size="16" fill="#222">«include»</text>
+<ellipse cx="420" cy="140" rx="115" ry="32" fill="#FFF7F2" stroke="#3D7D7A" stroke-width="2"/>
+<text x="420" y="146" text-anchor="middle" font-size="17" fill="#222">Cadastrar-se</text>
+<ellipse cx="420" cy="225" rx="115" ry="32" fill="#FFF7F2" stroke="#3D7D7A" stroke-width="2"/>
+<text x="420" y="231" text-anchor="middle" font-size="17" fill="#222">Visualizar catálogo</text>
+<ellipse cx="420" cy="310" rx="115" ry="32" fill="#FFF7F2" stroke="#3D7D7A" stroke-width="2"/>
+<text x="420" y="306" text-anchor="middle" font-size="17" fill="#222">Consultar detalhes</text>
+<text x="420" y="326" text-anchor="middle" font-size="17" fill="#222">do produto</text>
+<ellipse cx="420" cy="395" rx="115" ry="32" fill="#FFF7F2" stroke="#3D7D7A" stroke-width="2"/>
+<text x="420" y="401" text-anchor="middle" font-size="17" fill="#222">Gerenciar carrinho</text>
+<ellipse cx="420" cy="480" rx="115" ry="32" fill="#FFF7F2" stroke="#3D7D7A" stroke-width="2"/>
+<text x="420" y="486" text-anchor="middle" font-size="17" fill="#222">Finalizar pedido</text>
+<ellipse cx="420" cy="565" rx="115" ry="32" fill="#FFF7F2" stroke="#3D7D7A" stroke-width="2"/>
+<text x="420" y="561" text-anchor="middle" font-size="17" fill="#222">Acompanhar status</text>
+<text x="420" y="581" text-anchor="middle" font-size="17" fill="#222">do pedido</text>
+<ellipse cx="790" cy="225" rx="115" ry="32" fill="#FFF7F2" stroke="#3D7D7A" stroke-width="2"/>
+<text x="790" y="231" text-anchor="middle" font-size="17" fill="#222">Filtrar por categoria</text>
+<ellipse cx="790" cy="480" rx="125" ry="32" fill="#FFF7F2" stroke="#3D7D7A" stroke-width="2"/>
+<text x="790" y="476" text-anchor="middle" font-size="17" fill="#222">Escolher entrega/retirada</text>
+<text x="790" y="496" text-anchor="middle" font-size="17" fill="#222">e forma de pagamento</text>
+<ellipse cx="420" cy="655" rx="105" ry="32" fill="#FFF7F2" stroke="#3D7D7A" stroke-width="2"/>
+<text x="420" y="661" text-anchor="middle" font-size="17" fill="#222">Fazer login</text>
+<ellipse cx="790" cy="745" rx="115" ry="32" fill="#FFF7F2" stroke="#3D7D7A" stroke-width="2"/>
+<text x="790" y="751" text-anchor="middle" font-size="17" fill="#222">Gerenciar produtos</text>
+<ellipse cx="790" cy="825" rx="115" ry="32" fill="#FFF7F2" stroke="#3D7D7A" stroke-width="2"/>
+<text x="790" y="821" text-anchor="middle" font-size="17" fill="#222">Gerenciar pedidos</text>
+<text x="790" y="841" text-anchor="middle" font-size="17" fill="#222">(atualizar status)</text>
+<g stroke="#222" stroke-width="2.2" fill="none">
+ <circle cx="110" cy="372" r="16" fill="#fff"/>
+ <line x1="110" y1="388" x2="110" y2="430"/>
+ <line x1="84" y1="402" x2="136" y2="402"/>
+ <line x1="110" y1="430" x2="88" y2="464"/>
+ <line x1="110" y1="430" x2="132" y2="464"/></g>
+<text x="110" y="490" text-anchor="middle" font-size="18" fill="#222">Cliente</text>
+<g stroke="#222" stroke-width="2.2" fill="none">
+ <circle cx="1090" cy="712" r="16" fill="#fff"/>
+ <line x1="1090" y1="728" x2="1090" y2="770"/>
+ <line x1="1064" y1="742" x2="1116" y2="742"/>
+ <line x1="1090" y1="770" x2="1068" y2="804"/>
+ <line x1="1090" y1="770" x2="1112" y2="804"/></g>
+<text x="1090" y="830" text-anchor="middle" font-size="18" fill="#222">Administrador</text>
+</svg>

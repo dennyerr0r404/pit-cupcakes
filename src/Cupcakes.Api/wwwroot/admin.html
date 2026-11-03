@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel do administrador · Cupcakes Gourmet</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app largo">
+  <header class="topo admin">
+    <a class="icone-btn" href="index.html" aria-label="Ir para a loja" title="Ir para a loja"></a>
+    <h1>Painel do Administrador</h1>
+    <button class="icone-btn" id="sair" type="button" aria-label="Sair" title="Sair"></button>
+  </header>
+  <main>
+    <div class="admin-abas" role="tablist">
+      <button type="button" data-aba="pedidos" class="ativo" role="tab">Pedidos</button>
+      <button type="button" data-aba="produtos" role="tab">Produtos</button>
+    </div>
+
+    <section id="abaPedidos">
+      <div class="barra">
+        <div class="filtros" id="filtros">
+          <button type="button" data-sit="abertos" class="ativo">Abertos</button>
+          <button type="button" data-sit="concluidos">Concluídos</button>
+          <button type="button" data-sit="">Todos</button>
+        </div>
+        <button class="btn sec peq" id="recarregar" type="button">Atualizar</button>
+      </div>
+      <div id="listaPedidos" aria-live="polite"></div>
+    </section>
+
+    <section id="abaProdutos" hidden>
+      <div class="barra">
+        <span class="dica" id="contagem"></span>
+        <button class="btn peq" id="novo" type="button">+ Novo produto</button>
+      </div>
+      <div id="listaProdutos"></div>
+    </section>
+  </main>
+</div>
+
+<dialog id="dlg">
+  <form id="formProduto" method="dialog" novalidate>
+    <h2 id="dlgTitulo">Novo produto</h2>
+    <div id="dlgAlerta"></div>
+    <div class="campo" data-campo="nome">
+      <label for="pNome">Nome *</label>
+      <input id="pNome" name="nome" maxlength="120" required>
+      <div class="erro"></div>
+    </div>
+    <div class="campo" data-campo="categoriaId">
+      <label for="pCategoria">Categoria *</label>
+      <select id="pCategoria" name="categoria" required></select>
+      <div class="erro"></div>
+    </div>
+    <div class="dupla">
+      <div class="campo" data-campo="preco">
+        <label for="pPreco">Preço (R$) *</label>
+        <input id="pPreco" name="preco" type="number" min="0" step="0.01" inputmode="decimal" required>
+        <div class="erro"></div>
+      </div>
+      <div class="campo" data-campo="quantidadeEstoque">
+        <label for="pEstoque">Estoque *</label>
+        <input id="pEstoque" name="estoque" type="number" min="0" step="1" inputmode="numeric" required>
+        <div class="erro"></div>
+      </div>
+    </div>
+    <div class="campo" data-campo="imagemUrl">
+      <label for="pImagem">Imagem</label>
+      <select id="pImagem" name="imagem"></select>
+      <input id="pImagemUrl" name="imagemUrl" maxlength="255" placeholder="https://… ou /img/arquivo.svg" style="margin-top:8px" hidden>
+      <div class="erro"></div>
+    </div>
+    <div class="campo" data-campo="descricao">
+      <label for="pDescricao">Descrição</label>
+      <textarea id="pDescricao" name="descricao" rows="3"></textarea>
+      <div class="erro"></div>
+    </div>
+    <label class="check"><input type="checkbox" name="ativo" checked> Disponível para venda (ativo)</label>
+    <div class="dlg-acoes">
+      <button class="btn sec" type="button" id="cancelar">Cancelar</button>
+      <button class="btn" type="submit" id="salvar">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="js/core.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

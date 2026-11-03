@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9171C8D9-0B2A-47AF-A75A-A3AA1729AEDC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cupcakes.Api", "src\Cupcakes.Api\Cupcakes.Api.csproj", "{577A8F70-D867-44A1-940F-C17BBEBEB434}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{8ABE5B0E-2774-4B8D-B189-4CED00747EBD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cupcakes.Tests", "tests\Cupcakes.Tests\Cupcakes.Tests.csproj", "{9F65055C-0306-4B33-B4C7-9E5194A13B68}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{577A8F70-D867-44A1-940F-C17BBEBEB434}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{577A8F70-D867-44A1-940F-C17BBEBEB434}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{577A8F70-D867-44A1-940F-C17BBEBEB434}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{577A8F70-D867-44A1-940F-C17BBEBEB434}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F65055C-0306-4B33-B4C7-9E5194A13B68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F65055C-0306-4B33-B4C7-9E5194A13B68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F65055C-0306-4B33-B4C7-9E5194A13B68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F65055C-0306-4B33-B4C7-9E5194A13B68}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{577A8F70-D867-44A1-940F-C17BBEBEB434} = {9171C8D9-0B2A-47AF-A75A-A3AA1729AEDC}
+		{9F65055C-0306-4B33-B4C7-9E5194A13B68} = {8ABE5B0E-2774-4B8D-B189-4CED00747EBD}
+	EndGlobalSection
+EndGlobal

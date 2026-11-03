@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detalhes do produto · Cupcakes Gourmet</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <main id="conteudo"><div class="carregando">Carregando…</div></main>
+</div>
+<script src="js/core.js"></script>
+<script>
+(async () => {
+  montarLayout({ titulo: "Detalhes do Produto", voltar: true, carrinho: true });
+  const el = $("#conteudo");
+  const id = Number(params.get("id"));
+  let p;
+  try {
+    if (!id) throw new ErroApi(404, "Este produto não está disponível.");
+    p = await api(`produtos/${id}`);
+  } catch (e) {
+    el.innerHTML = telaErro(e) + telaVazia("Que tal escolher outro cupcake?", "Ver catálogo", "index.html");
+    return;
+  }
+  document.title = `${p.nome} · Cupcakes Gourmet`;
+  const noCarrinho = Carrinho.qtdDe(p.id);
+  const maximo = Math.max(0, p.quantidadeEstoque - noCarrinho);
+  let qtd = maximo > 0 ? 1 : 0;
+
+  el.innerHTML = `
+    <div class="foto">${imagemProduto(p)}</div>
+    <div class="det-titulo"><h2>${esc(p.nome)}</h2><span class="tag">${esc(p.categoria)}</span></div>
+    <p class="desc">${esc(p.descricao || "")}</p>
+    <p class="disp ${p.disponivel ? "ok" : "nao"}">${p.disponivel
+      ? `● Disponível · ${p.quantidadeEstoque} unidade(s)` : "● Esgotado no momento"}</p>
+    ${noCarrinho ? `<p class="dica">Você já tem ${noCarrinho} no carrinho.</p>` : ""}
+    <div class="det-compra">
+      <span class="preco">${moeda(p.preco)}</span>
+      <div class="qtd" aria-label="Quantidade">
+        <button type="button" id="menos" aria-label="Diminuir">−</button>
+        <output id="qtd" aria-live="polite">${qtd}</output>
+        <button type="button" id="mais" aria-label="Aumentar">+</button>
+      </div>
+    </div>
+    <button class="btn" id="adicionar" type="button"></button>`;
+
+  const atualizar = () => {
+    $("#qtd").textContent = qtd;
+    $("#menos").disabled = qtd <= 1;
+    $("#mais").disabled = qtd >= maximo;
+    const b = $("#adicionar");
+    b.disabled = qtd < 1;
+    b.textContent = !p.disponivel ? "Esgotado" : maximo === 0 ? "Limite do estoque no carrinho"
+      : `Adicionar ao carrinho · ${moeda(p.preco * qtd)}`;
+  };
+  $("#menos").onclick = () => { if (qtd > 1) { qtd--; atualizar(); } };
+  $("#mais").onclick = () => { if (qtd < maximo) { qtd++; atualizar(); } };
+  $("#adicionar").onclick = () => {
+    Carrinho.adicionar(p.id, qtd);
+    toast(`${qtd} × ${p.nome} no carrinho`);
+    setTimeout(() => location.href = "carrinho.html", 600);
+  };
+  atualizar();
+})();
+</script>
+</body>
+</html>

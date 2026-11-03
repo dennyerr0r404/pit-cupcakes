@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar · Cupcakes Gourmet</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <main>
+    <p class="nota" id="motivo" style="margin-bottom:16px" hidden>Entre na sua conta para finalizar o pedido.</p>
+    <form id="form" novalidate>
+      <div id="alerta"></div>
+      <div class="campo" data-campo="email">
+        <label for="email">E-mail</label>
+        <input id="email" name="email" type="email" autocomplete="email" required>
+        <div class="erro"></div>
+      </div>
+      <div class="campo" data-campo="senha">
+        <label for="senha">Senha</label>
+        <input id="senha" name="senha" type="password" autocomplete="current-password" required>
+        <div class="erro"></div>
+      </div>
+      <button class="btn" type="submit">Entrar</button>
+      <p class="form-rodape">Ainda não tem conta? <a class="link" id="linkCadastro" href="cadastro.html">Cadastre-se</a></p>
+    </form>
+  </main>
+</div>
+<script src="js/core.js"></script>
+<script>
+  montarLayout({ titulo: "Entrar", voltar: true, nav: "perfil" });
+  const voltar = params.get("voltar");
+  const destino = voltar && /^[a-z0-9_-]+\.html/i.test(voltar) ? voltar : "perfil.html";
+  if (voltar) { $("#motivo").hidden = false; $("#linkCadastro").href = "cadastro.html?voltar=" + encodeURIComponent(voltar); }
+  if (Sessao.atual()) location.replace(destino);
+
+  $("#form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const f = e.target; limparErros(f); $("#alerta").innerHTML = "";
+    const email = f.email.value.trim(), senha = f.senha.value;
+    let ok = true;
+    if (!email) { marcarCampo(f, "email", "Informe o e-mail."); ok = false; }
+    if (!senha) { marcarCampo(f, "senha", "Informe a senha."); ok = false; }
+    if (!ok) return;
+    const b = $("button[type=submit]", f); b.disabled = true; b.textContent = "Entrando…";
+    try {
+      Sessao.salvar(await api("auth/login", { metodo: "POST", corpo: { email, senha } }));
+      location.replace(Sessao.ehAdmin() && !voltar ? "admin.html" : destino);
+    } catch (err) {
+      if (!mostrarErros(f, err)) $("#alerta").innerHTML = `<div class="aviso erro" role="alert">${esc(err.message)}</div>`;
+      b.disabled = false; b.textContent = "Entrar";
+    }
+  });
+</script>
+</body>
+</html>

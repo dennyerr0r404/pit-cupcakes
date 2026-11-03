@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Perfil · Cupcakes Gourmet</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <main id="conteudo"></main>
+</div>
+<script src="js/core.js"></script>
+<script>
+  montarLayout({ titulo: "Perfil", nav: "perfil" });
+  const el = $("#conteudo");
+  const u = Sessao.usuario();
+  if (!u) {
+    el.innerHTML = `
+      <div class="perfil" style="text-align:center">
+        <div class="avatar" style="margin:0 auto 10px">${ICONES.perfil}</div>
+        <b>Você não está conectado</b>
+        <p>Entre para finalizar pedidos e acompanhar o status.</p>
+      </div>
+      <div class="pilha">
+        <a class="btn" href="login.html">Entrar</a>
+        <a class="btn sec" href="cadastro.html">Criar conta</a>
+      </div>`;
+  } else {
+    el.innerHTML = `
+      <div class="perfil">
+        <div class="avatar">${esc(u.nome.trim()[0]?.toUpperCase() || "?")}</div>
+        <b style="font-size:18px">${esc(u.nome)}</b>
+        <p>${esc(u.email)}</p>
+        ${u.telefone ? `<p>${esc(u.telefone)}</p>` : ""}
+        ${u.perfil === "ADMIN" ? '<p style="margin-top:8px"><span class="tag">Administrador</span></p>' : ""}
+      </div>
+      <div class="pilha">
+        ${u.perfil === "ADMIN" ? '<a class="btn" href="admin.html">Painel do administrador</a>' : ""}
+        <a class="btn ${u.perfil === "ADMIN" ? "sec" : ""}" href="pedidos.html">Meus pedidos</a>
+        <button class="btn perigo" id="sair" type="button">Sair</button>
+      </div>`;
+    $("#sair").onclick = async () => { await Sessao.sair(); location.replace("index.html"); };
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Cupcakes.Api</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Única dependência externa: o driver ADO.NET do PostgreSQL.
+       Autenticação por cookie e hash de senha (PBKDF2) já vêm no ASP.NET Core. -->
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="8.0.6" />
+  </ItemGroup>
+
+  <!-- Permite que o projeto de testes acesse membros internal -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Cupcakes.Tests" />
+  </ItemGroup>
+
+  <!-- Scripts do banco copiados para a saída: usados na criação automática do banco -->
+  <ItemGroup>
+    <None Include="..\..\database\*.sql" LinkBase="database" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

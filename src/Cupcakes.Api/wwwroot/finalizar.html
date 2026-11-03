@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Finalizar pedido · Cupcakes Gourmet</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <main id="conteudo"><div class="carregando">Carregando…</div></main>
+</div>
+<script src="js/core.js"></script>
+<script>
+(async () => {
+  if (!Sessao.exigir()) return;
+  montarLayout({ titulo: "Finalizar Pedido", voltar: "carrinho.html" });
+  const el = $("#conteudo");
+  const usuario = Sessao.usuario();
+  if (!Carrinho.itens().length) { el.innerHTML = telaVazia("Seu carrinho está vazio.", "Ver cupcakes", "index.html"); return; }
+
+  let produtos = {};
+  try { (await api("produtos")).forEach(p => produtos[p.id] = p); }
+  catch (e) { el.innerHTML = telaErro(e); return; }
+  const itens = Carrinho.itens().filter(i => produtos[i.id]);
+  if (itens.length !== Carrinho.itens().length) { location.replace("carrinho.html"); return; }
+  const total = itens.reduce((s, i) => s + produtos[i.id].preco * i.qtd, 0);
+
+  el.innerHTML = `
+    <form id="form" novalidate>
+      <div class="nota" style="margin-bottom:14px">Pedido de <b>${esc(usuario.nome)}</b> · ${esc(usuario.email)}</div>
+      <div id="alerta"></div>
+      <fieldset style="border:none" class="campo" data-campo="tipoEntrega">
+        <legend class="rotulo">Como deseja receber?</legend>
+        <div class="seg">
+          <label><input type="radio" name="tipo" value="ENTREGA" checked> Entrega</label>
+          <label><input type="radio" name="tipo" value="RETIRADA"> Retirada na loja</label>
+        </div>
+        <div class="erro"></div>
+      </fieldset>
+      <div class="campo" data-campo="enderecoEntrega" id="blocoEndereco">
+        <label for="endereco">Endereço de entrega *</label>
+        <input id="endereco" name="endereco" maxlength="255" autocomplete="street-address" placeholder="Rua, número, bairro">
+        <div class="erro"></div>
+      </div>
+      <p class="nota" id="infoRetirada" hidden style="margin-bottom:14px">Retire na loja quando o status mudar para <b>Pronto para retirada</b>.</p>
+      <fieldset style="border:none" class="campo" data-campo="formaPagamento">
+        <legend class="rotulo" id="rotuloPagto">Forma de pagamento (na entrega)</legend>
+        <div class="opcoes">
+          <label><input type="radio" name="pagto" value="PIX" checked> PIX</label>
+          <label><input type="radio" name="pagto" value="DINHEIRO"> Dinheiro</label>
+          <label><input type="radio" name="pagto" value="CARTAO"> Cartão</label>
+        </div>
+        <div class="dica">O pagamento é feito no momento da entrega ou da retirada.</div>
+        <div class="erro"></div>
+      </fieldset>
+      <div class="campo" data-campo="observacao">
+        <label for="obs">Observação (opcional)</label>
+        <textarea id="obs" name="obs" maxlength="255" placeholder="Ex.: tocar o interfone"></textarea>
+        <div class="erro"></div>
+      </div>
+      <div class="resumo">
+        ${itens.map(i => `<div><span>${esc(produtos[i.id].nome)} × ${i.qtd}</span><span>${moeda(produtos[i.id].preco * i.qtd)}</span></div>`).join("")}
+        <div class="total"><span>Total</span><span>${moeda(total)}</span></div>
+      </div>
+      <button class="btn" type="submit" style="margin-top:8px">Confirmar pedido</button>
+    </form>`;
+
+  const f = $("#form");
+  const ajustarTipo = () => {
+    const entrega = f.tipo.value === "ENTREGA";
+    $("#blocoEndereco").hidden = !entrega;
+    $("#infoRetirada").hidden = entrega;
+    $("#rotuloPagto").textContent = `Forma de pagamento (na ${entrega ? "entrega" : "retirada"})`;
+  };
+  $$("input[name=tipo]", f).forEach(r => r.addEventListener("change", ajustarTipo));
+  ajustarTipo();
+
+  f.addEventListener("submit", async e => {
+    e.preventDefault();
+    limparErros(f); $("#alerta").innerHTML = "";
+    const corpo = {
+      tipoEntrega: f.tipo.value,
+      enderecoEntrega: f.tipo.value === "ENTREGA" ? f.endereco.value.trim() : null,
+      formaPagamento: f.pagto.value,
+      observacao: f.obs.value.trim() || null,
+      itens: itens.map(i => ({ produtoId: i.id, quantidade: i.qtd })),
+    };
+    if (corpo.tipoEntrega === "ENTREGA" && (corpo.enderecoEntrega || "").length < 5) {
+      marcarCampo(f, "enderecoEntrega", "Informe o endereço para pedidos com entrega.");
+      f.endereco.focus(); return;
+    }
+    const b = $("button[type=submit]", f); b.disabled = true; b.textContent = "Enviando pedido…";
+    try {
+      const pedido = await api("pedidos", { metodo: "POST", corpo });
+      Carrinho.limpar();
+      location.replace(`pedido.html?id=${pedido.id}&novo=1`);
+    } catch (err) {
+      if (err.status === 401) { Sessao.irParaLogin(); return; }
+      if (err.message.includes("endereço")) marcarCampo(f, "enderecoEntrega", err.message);
+      else if (!mostrarErros(f, err))
+        $("#alerta").innerHTML = `<div class="aviso erro" role="alert">${esc(err.message)} <a class="link" href="carrinho.html">Revisar carrinho</a></div>`;
+      b.disabled = false; b.textContent = "Confirmar pedido";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cupcakes Gourmet</title>
+  <meta name="theme-color" content="#F9E1E3">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <main>
+    <section class="banner">
+      <h2>Cupcakes Gourmet</h2>
+      <p>Feitos no dia · entrega ou retirada na loja</p>
+    </section>
+    <div class="abas" id="abas" role="tablist" aria-label="Categorias"></div>
+    <div id="lista" aria-live="polite"><div class="carregando">Carregando cupcakes…</div></div>
+  </main>
+</div>
+<script src="js/core.js"></script>
+<script>
+(async () => {
+  montarLayout({ nav: "inicio" });
+  const abas = $("#abas"), lista = $("#lista");
+  let categoriaAtual = Number(params.get("categoria")) || null;
+
+  try {
+    const categorias = await api("categorias");
+    const botoes = [{ id: null, nome: "Todos" }, ...categorias];
+    abas.innerHTML = botoes.map(c =>
+      `<button type="button" role="tab" data-id="${c.id ?? ""}">${esc(c.nome)}</button>`).join("");
+    abas.addEventListener("click", e => {
+      const b = e.target.closest("button"); if (!b) return;
+      categoriaAtual = b.dataset.id ? Number(b.dataset.id) : null;
+      history.replaceState(null, "", categoriaAtual ? `?categoria=${categoriaAtual}` : "index.html");
+      carregar();
+    });
+  } catch (e) { lista.innerHTML = telaErro(e); return; }
+
+  async function carregar() {
+    $$("button", abas).forEach(b => {
+      const ativo = (b.dataset.id ? Number(b.dataset.id) : null) === categoriaAtual;
+      b.classList.toggle("ativo", ativo); b.setAttribute("aria-selected", ativo);
+    });
+    lista.innerHTML = '<div class="carregando">Carregando cupcakes…</div>';
+    try {
+      const produtos = await api("produtos" + (categoriaAtual ? `?categoriaId=${categoriaAtual}` : ""));
+      if (!produtos.length) { lista.innerHTML = telaVazia("Nenhum cupcake nesta categoria no momento."); return; }
+      lista.innerHTML = `<div class="grade">${produtos.map(p => `
+        <article class="card">
+          <a href="produto.html?id=${p.id}" aria-label="Ver detalhes de ${esc(p.nome)}">
+            <div class="img">${imagemProduto(p)}</div>
+            <div class="nome">${esc(p.nome)}</div>
+          </a>
+          <div class="rodape">
+            <span class="preco">${moeda(p.preco)}</span>
+            ${p.disponivel
+              ? `<button class="mais" type="button" data-add="${p.id}" data-estoque="${p.quantidadeEstoque}" aria-label="Adicionar ${esc(p.nome)} ao carrinho">+</button>`
+              : '<span class="tag esgotado">Esgotado</span>'}
+          </div>
+        </article>`).join("")}</div>`;
+    } catch (e) { lista.innerHTML = telaErro(e); }
+  }
+
+  lista.addEventListener("click", e => {
+    const b = e.target.closest("[data-add]"); if (!b) return;
+    const id = Number(b.dataset.add), estoque = Number(b.dataset.estoque);
+    if (Carrinho.qtdDe(id) + 1 > estoque) { toast(`Só há ${estoque} unidade(s) em estoque.`, true); return; }
+    Carrinho.adicionar(id, 1);
+    toast("Adicionado ao carrinho");
+  });
+
+  carregar();
+})();
+</script>
+</body>
+</html>
