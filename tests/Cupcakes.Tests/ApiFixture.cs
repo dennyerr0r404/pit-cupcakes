@@ -27,12 +27,16 @@ public class ApiFixture : IAsyncLifetime
     private WebApplication? _app;
     public Uri BaseUri { get; private set; } = null!;
 
+    /// <summary>Conexão do banco de testes (para preparar cenários direto no banco).</summary>
+    public string ConnectionString { get; private set; } = "";
+
     public async Task InitializeAsync()
     {
         var conexao = new NpgsqlConnectionStringBuilder(
             Environment.GetEnvironmentVariable("CUPCAKES_TEST_DB")
             ?? "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=cupcakes_teste");
         await RecriarBancoAsync(conexao);
+        ConnectionString = conexao.ConnectionString;
 
         // Raiz de conteúdo = pasta do projeto da API (para servir o front-end em wwwroot).
         _app = await App.CriarAsync(["--contentRoot", PastaDaApi()], b =>

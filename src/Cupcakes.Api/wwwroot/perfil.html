@@ -39,6 +39,8 @@
       <div class="pilha">
         ${u.perfil === "ADMIN" ? '<a class="btn" href="admin.html">Painel do administrador</a>' : ""}
         <a class="btn ${u.perfil === "ADMIN" ? "sec" : ""}" href="pedidos.html">Meus pedidos</a>
+        <a class="btn sec" href="editar-perfil.html">Editar meus dados e senha</a>
+        <a class="btn sec" href="feedback.html">★ Enviar feedback</a>
         <button class="btn perigo" id="sair" type="button">Sair</button>
       </div>`;
     $("#sair").onclick = async () => { await Sessao.sair(); location.replace("index.html"); };

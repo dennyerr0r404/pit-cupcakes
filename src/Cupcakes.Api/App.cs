@@ -25,8 +25,12 @@ public static class App
         builder.Services.AddSingleton<UsuarioRepositorio>();
         builder.Services.AddSingleton<ProdutoRepositorio>();
         builder.Services.AddSingleton<PedidoRepositorio>();
+        builder.Services.AddSingleton<FeedbackRepositorio>();
         builder.Services.AddSingleton<SenhaService>();
         builder.Services.AddScoped<PedidoService>();
+        builder.Services.AddScoped<FeedbackService>();
+        builder.Services.AddSingleton(builder.Configuration.GetSection("Senha").Get<RecuperacaoSenhaOptions>() ?? new RecuperacaoSenhaOptions());
+        builder.Services.AddScoped<RecuperacaoSenhaService>();
 
         // ---------- Autenticação por cookie ----------
         builder.Services

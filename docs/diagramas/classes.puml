@@ -72,6 +72,22 @@ class ItemPedido {
   + calcularSubtotal(): decimal
 }
 
+class Feedback {
+  - idFeedback: int
+  - nota: int
+  - comentario: string
+  - dataEnvio: DateTime
+  - lido: bool
+  - assunto: AssuntoFeedback
+  --
+  + validar(): void
+}
+
+enum AssuntoFeedback {
+  PRODUTO
+  ATENDIMENTO
+}
+
 enum PerfilUsuario {
   CLIENTE
   ADMIN
@@ -102,6 +118,10 @@ Pedido "1" *-- "1..*" ItemPedido : contém >
 Produto "1" -- "0..*" ItemPedido : é vendido em >
 Categoria "1" -- "0..*" Produto : agrupa >
 
+Usuario "1" -- "0..*" Feedback : envia >
+Feedback "0..*" -- "0..1" Produto : avalia >
+Feedback "0..*" -- "0..1" Pedido : refere-se a >
+Feedback ..> AssuntoFeedback
 Usuario ..> PerfilUsuario
 Pedido ..> StatusPedido
 Pedido ..> TipoEntrega

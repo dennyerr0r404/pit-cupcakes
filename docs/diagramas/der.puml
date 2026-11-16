@@ -70,7 +70,23 @@ entity "item_pedido" as item_pedido {
   subtotal : NUMERIC(10,2) <<calculado>>
 }
 
+entity "feedback" as feedback {
+  * id_feedback : INT <<PK>>
+  --
+  * id_usuario : INT <<FK>>
+  id_pedido : INT <<FK>>
+  id_produto : INT <<FK>>
+  * assunto : VARCHAR(20)
+  * nota : SMALLINT
+  * comentario : VARCHAR(1000)
+  * data_envio : TIMESTAMPTZ
+  * lido : BOOLEAN
+}
+
 usuario ||--o{ pedido
+usuario ||--o{ feedback
+pedido |o--o{ feedback
+produto |o--o{ feedback
 pedido ||--|{ item_pedido
 produto ||--o{ item_pedido
 categoria ||--o{ produto

@@ -8,6 +8,8 @@ public enum TipoEntrega { Entrega, Retirada }
 
 public enum FormaPagamento { Dinheiro, Pix, Cartao }
 
+public enum AssuntoFeedback { Produto, Atendimento }
+
 /// <summary>
 /// Conversão entre os enums do C# e os códigos gravados no banco/enviados pela API
 /// (ex.: StatusPedido.EmPreparo &lt;-&gt; "EM_PREPARO").
@@ -42,6 +44,16 @@ public static class Codigos
         [FormaPagamento.Pix] = "PIX",
         [FormaPagamento.Cartao] = "CARTAO",
     };
+
+    private static readonly Dictionary<AssuntoFeedback, string> Assuntos = new()
+    {
+        [AssuntoFeedback.Produto] = "PRODUTO",
+        [AssuntoFeedback.Atendimento] = "ATENDIMENTO",
+    };
+
+    public static string Codigo(this AssuntoFeedback v) => Assuntos[v];
+    public static AssuntoFeedback ParseAssunto(string s) => Parse(Assuntos, s, "assunto");
+    public static bool TryParseAssunto(string? s, out AssuntoFeedback v) => TryParse(Assuntos, s, out v);
 
     public static string Codigo(this PerfilUsuario v) => Perfis[v];
     public static string Codigo(this StatusPedido v) => Status[v];

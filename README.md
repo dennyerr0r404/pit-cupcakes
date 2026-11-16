@@ -14,10 +14,12 @@ Aplicação web de vendas para uma loja de cupcakes gourmet, desenvolvida no Pro
 - Finalização com **entrega** (endereço obrigatório) ou **retirada na loja**
 - Pagamento **simulado**: PIX, dinheiro ou cartão, pago na entrega ou na retirada
 - Confirmação com número do pedido, lista de pedidos e linha do tempo do status
+- **Feedback**: nota de 1 a 5 estrelas e comentário sobre um produto ou sobre o atendimento (botão na tela do pedido, no perfil e no detalhe do produto)
 
 **Administrador**
 - Pedidos abertos, concluídos ou todos; avanço de status conforme o fluxo e cancelamento (devolve o estoque)
 - Cadastro, edição, ativação e desativação de produtos
+- Feedbacks dos clientes, com média por produto e por atendimento, contagem de não lidos e marcação como lido
 
 **Regras garantidas no servidor**
 - Total e subtotais calculados com os preços do banco; valores enviados pela interface são ignorados
@@ -53,7 +55,7 @@ Pré-requisitos: [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) 
    ```bash
    dotnet run --project src/Cupcakes.Api
    ```
-   Na primeira execução, as tabelas e a carga inicial (`database/*.sql`) são criadas automaticamente.
+   Na primeira execução, as tabelas e a carga inicial (`database/*.sql`) são criadas automaticamente. Em um banco que já existia, a tabela de feedback (`03_feedback.sql`) é adicionada sozinha ao iniciar.
 4. Abra **http://localhost:5000**.
 
 Usuários de demonstração (troque as senhas antes de publicar):
@@ -65,7 +67,7 @@ Usuários de demonstração (troque as senhas antes de publicar):
 
 O painel do administrador fica em **/admin.html** (ou em Perfil → Painel do administrador).
 
-> Para criar o banco manualmente em vez da criação automática: execute `database/01_schema.sql` e depois `database/02_seed.sql`, e defina `"Banco": { "InicializarAutomaticamente": false }`.
+> Para criar o banco manualmente em vez da criação automática: execute `database/01_schema.sql`, `database/02_seed.sql` e `database/03_feedback.sql`, e defina `"Banco": { "InicializarAutomaticamente": false }`.
 
 ## Testes automatizados
 
@@ -85,7 +87,7 @@ export CUPCAKES_TEST_DB="Host=localhost;Port=5432;Username=postgres;Password=SUA
 $env:CUPCAKES_TEST_DB="Host=localhost;Port=5432;Username=postgres;Password=SUA_SENHA;Database=cupcakes_teste"
 ```
 
-Resultado da última execução: **47 testes, 47 aprovados** (casos CT01 a CT14 do plano de testes, regras de negócio, login, validações e páginas do front-end).
+Resultado da última execução: **62 testes, 62 aprovados** (casos CT01 a CT17 do plano de testes, regras de negócio, feedback, login, validações e páginas do front-end).
 
 ## Publicação (opcional)
 
@@ -129,6 +131,9 @@ tools/                    scripts que geram diagramas, imagens e documentos
 | `PATCH /api/admin/pedidos/{id}/status` | Admin | Muda o status |
 | `GET/POST/PUT /api/admin/produtos` | Admin | Produtos |
 | `PATCH /api/admin/produtos/{id}/ativo` | Admin | Ativa/desativa produto |
+| `POST /api/feedbacks`, `GET /api/feedbacks` | Cliente | Envia feedback e lista os enviados |
+| `GET /api/admin/feedbacks?situacao=nao_lidos` | Admin | Feedbacks com médias |
+| `PATCH /api/admin/feedbacks/{id}/lido` | Admin | Marca como lido/não lido |
 
 ## Andamento
 

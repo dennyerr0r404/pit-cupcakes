@@ -27,7 +27,10 @@
     $$(".admin-abas button").forEach(x => { x.classList.toggle("ativo", x === b); x.setAttribute("aria-selected", x === b); });
     $("#abaPedidos").hidden = b.dataset.aba !== "pedidos";
     $("#abaProdutos").hidden = b.dataset.aba !== "produtos";
-    if (b.dataset.aba === "produtos") carregarProdutos(); else carregarPedidos();
+    $("#abaFeedbacks").hidden = b.dataset.aba !== "feedbacks";
+    if (b.dataset.aba === "produtos") carregarProdutos();
+    else if (b.dataset.aba === "feedbacks") carregarFeedbacks();
+    else carregarPedidos();
   }));
 
   // ---------------- Pedidos ----------------
@@ -127,16 +130,65 @@
 
   // ---------------- Formulário de produto ----------------
   const dlg = $("#dlg"), f = $("#formProduto");
-  $("#pImagem").innerHTML = IMAGENS.map(([v, n]) => `<option value="${v}">${n}</option>`).join("") + '<option value="__url">Outra (informar URL)</option>';
-  $("#pImagem").addEventListener("change", () => { $("#pImagemUrl").hidden = $("#pImagem").value !== "__url"; });
+  const TIPOS_FOTO = ["image/jpeg", "image/png", "image/webp"], MAX_FOTO = 2 * 1024 * 1024;
+  let arquivoFoto = null, urlPreviewArquivo = null;
+
+  $("#pImagem").addEventListener("change", () => {
+    // Escolheu outra imagem na lista: descarta a foto do computador que ainda não foi enviada.
+    if ($("#pImagem").value !== "__novo" && arquivoFoto) {
+      arquivoFoto = null; $("#pArquivo").value = "";
+      $("#pImagem").querySelector('option[value="__novo"]')?.remove();
+      $("#pArquivoInfo").textContent = "JPG, PNG ou WebP, até 2 MB. Substitui a imagem escolhida acima.";
+    }
+    $("#pImagemUrl").hidden = $("#pImagem").value !== "__url";
+    atualizarPreview();
+  });
+  $("#pImagemUrl").addEventListener("input", atualizarPreview);
   $("#novo").onclick = () => abrirForm(null);
   $("#cancelar").onclick = () => dlg.close();
 
+  // Laudo, item 7: foto enviada do computador, com conferência de tipo e tamanho antes do envio.
+  $("#pArquivo").addEventListener("change", () => {
+    const arq = $("#pArquivo").files[0];
+    limparErros(f);
+    if (!arq) return;
+    if (!TIPOS_FOTO.includes(arq.type)) { marcarCampo(f, "arquivo", "Formato não aceito. Envie uma foto JPG, PNG ou WebP."); $("#pArquivo").value = ""; return; }
+    if (arq.size > MAX_FOTO) { marcarCampo(f, "arquivo", "A foto deve ter no máximo 2 MB."); $("#pArquivo").value = ""; return; }
+    arquivoFoto = arq;
+    $("#pArquivoInfo").textContent = `Foto selecionada: ${arq.name} (${(arq.size / 1024).toFixed(0)} KB). Será enviada ao salvar.`;
+    const sel = $("#pImagem");
+    if (!sel.querySelector('option[value="__novo"]')) sel.insertAdjacentHTML("afterbegin", '<option value="__novo">Foto do computador (nova)</option>');
+    sel.value = "__novo"; $("#pImagemUrl").hidden = true;
+    atualizarPreview();
+  });
+
+  function urlImagemEscolhida() {
+    const v = f.imagem.value;
+    if (v === "__url") return f.imagemUrl.value.trim() || null;
+    if (v === "__foto") return editando?.imagemUrl ?? null;
+    if (v === "__novo") return editando?.imagemUrl ?? null;   // a foto nova é enviada logo após salvar
+    return v;
+  }
+
+  function atualizarPreview() {
+    if (urlPreviewArquivo) { URL.revokeObjectURL(urlPreviewArquivo); urlPreviewArquivo = null; }
+    if (arquivoFoto) urlPreviewArquivo = URL.createObjectURL(arquivoFoto);
+    const img = $("#pPreview");
+    img.onerror = () => { img.onerror = null; img.src = "img/cupcake-padrao.svg"; };
+    img.src = urlPreviewArquivo || urlImagemEscolhida() || "img/cupcake-padrao.svg";
+  }
+
   function abrirForm(p) {
     editando = p;
+    arquivoFoto = null; $("#pArquivo").value = "";
+    $("#pArquivoInfo").textContent = "JPG, PNG ou WebP, até 2 MB. Substitui a imagem escolhida acima.";
     limparErros(f); $("#dlgAlerta").innerHTML = "";
     $("#dlgTitulo").textContent = p ? `Editar: ${p.nome}` : "Novo produto";
     $("#pCategoria").innerHTML = categorias.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join("");
+    const temFoto = !!p?.imagemUrl?.startsWith(`/api/produtos/${p.id}/imagem`);
+    $("#pImagem").innerHTML = (temFoto ? '<option value="__foto">Foto enviada (atual)</option>' : "") +
+      IMAGENS.map(([v, n]) => `<option value="${v}">Ilustração: ${n}</option>`).join("") +
+      '<option value="__url">Outra (informar URL)</option>';
     f.nome.value = p?.nome ?? "";
     f.categoria.value = p?.categoriaId ?? categorias[0]?.id ?? "";
     f.preco.value = p ? p.preco.toFixed(2) : "";
@@ -144,9 +196,11 @@
     f.descricao.value = p?.descricao ?? "";
     f.ativo.checked = p ? p.ativo : true;
     const img = p?.imagemUrl ?? IMAGENS[IMAGENS.length - 1][0];
-    if (IMAGENS.some(([v]) => v === img)) { f.imagem.value = img; f.imagemUrl.value = ""; }
+    if (temFoto) { f.imagem.value = "__foto"; f.imagemUrl.value = ""; }
+    else if (IMAGENS.some(([v]) => v === img)) { f.imagem.value = img; f.imagemUrl.value = ""; }
     else { f.imagem.value = "__url"; f.imagemUrl.value = img; }
     $("#pImagemUrl").hidden = f.imagem.value !== "__url";
+    atualizarPreview();
     dlg.showModal();
     f.nome.focus();
   }
@@ -159,27 +213,80 @@
       categoriaId: Number(f.categoria.value),
       preco: Number(String(f.preco.value).replace(",", ".")),
       quantidadeEstoque: Number(f.estoque.value),
-      imagemUrl: f.imagem.value === "__url" ? f.imagemUrl.value.trim() || null : f.imagem.value,
+      imagemUrl: urlImagemEscolhida(),
       descricao: f.descricao.value.trim() || null,
       ativo: f.ativo.checked,
     };
     let ok = true;
     if (corpo.nome.length < 2) { marcarCampo(f, "nome", "Informe o nome do produto."); ok = false; }
+    // Laudo, item 6: aviso imediato de nome repetido (o servidor também confere).
+    else if (produtos.some(p => p.id !== editando?.id && p.nome.trim().toLowerCase() === corpo.nome.toLowerCase())) {
+      marcarCampo(f, "nome", "Já existe um produto com este nome."); ok = false;
+    }
     if (f.preco.value === "" || !(corpo.preco >= 0)) { marcarCampo(f, "preco", "Informe um preço válido (não negativo)."); ok = false; }
     if (f.estoque.value === "" || !Number.isInteger(corpo.quantidadeEstoque) || corpo.quantidadeEstoque < 0) { marcarCampo(f, "quantidadeEstoque", "Informe um estoque válido (inteiro, não negativo)."); ok = false; }
     if (!ok) return;
-    const b = $("#salvar"); b.disabled = true;
+    const b = $("#salvar"); b.disabled = true; b.textContent = arquivoFoto ? "Salvando e enviando foto…" : "Salvando…";
     try {
-      const salvo = editando
+      let salvo = editando
         ? await api(`admin/produtos/${editando.id}`, { metodo: "PUT", corpo })
         : await api("admin/produtos", { metodo: "POST", corpo });
+      editando = salvo;   // se a foto falhar, um novo "Salvar" altera em vez de criar outro produto
+      if (arquivoFoto) {
+        const dados = new FormData();
+        dados.append("arquivo", arquivoFoto);
+        salvo = await api(`admin/produtos/${salvo.id}/imagem`, { metodo: "POST", corpo: dados });
+        arquivoFoto = null;
+      }
       dlg.close();
       toast(`${salvo.nome} salvo`);
       carregarProdutos();
     } catch (err) {
       if (!mostrarErros(f, err)) $("#dlgAlerta").innerHTML = `<div class="aviso erro" role="alert">${esc(err.message)}</div>`;
-    } finally { b.disabled = false; }
+      if (editando) $("#dlgTitulo").textContent = `Editar: ${editando.nome}`;
+    } finally { b.disabled = false; b.textContent = "Salvar"; }
   });
+
+  // ---------------- Feedbacks (RF12) ----------------
+  let sitFeedback = "nao_lidos";
+  const media = v => v == null ? "—" : `${Number(v).toFixed(1).replace(".", ",")} <small style="font-size:14px;color:#F2B01E">★</small>`;
+
+  $("#filtrosFeedback").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    sitFeedback = b.dataset.sit;
+    $$("#filtrosFeedback button").forEach(x => x.classList.toggle("ativo", x === b));
+    carregarFeedbacks();
+  });
+
+  async function carregarFeedbacks() {
+    const el = $("#listaFeedbacks");
+    try {
+      const { resumo, itens } = await api("admin/feedbacks" + (sitFeedback ? `?situacao=${sitFeedback}` : ""));
+      $("#contFeedback").textContent = resumo.naoLidos || "";
+      $("#resumoFeedback").innerHTML = `
+        <div><span>Feedbacks recebidos</span><b>${resumo.total}</b></div>
+        <div><span>Não lidos</span><b>${resumo.naoLidos}</b></div>
+        <div><span>Média dos produtos</span><b>${media(resumo.mediaProduto)}</b></div>
+        <div><span>Média do atendimento</span><b>${media(resumo.mediaAtendimento)}</b></div>`;
+      el.innerHTML = itens.length ? itens.map(fb => cartaoFeedback(fb, true)).join("")
+        : `<div style="grid-column:1/-1">${telaVazia(sitFeedback ? "Nenhum feedback novo." : "Nenhum feedback recebido ainda.")}</div>`;
+    } catch (e) {
+      if (e.status === 401) { Sessao.irParaLogin(); return; }
+      el.innerHTML = telaErro(e);
+    }
+  }
+
+  $("#listaFeedbacks").addEventListener("click", async e => {
+    const b = e.target.closest("[data-lido]"); if (!b) return;
+    b.disabled = true;
+    try {
+      await api(`admin/feedbacks/${b.dataset.lido}/lido`, { metodo: "PATCH", corpo: { lido: b.dataset.valor === "true" } });
+      carregarFeedbacks();
+    } catch (err) { toast(err.message, true); b.disabled = false; }
+  });
+
+  // Mostra quantos feedbacks novos existem logo ao abrir o painel.
+  api("admin/feedbacks?situacao=nao_lidos").then(r => { $("#contFeedback").textContent = r.resumo.naoLidos || ""; }).catch(() => {});
 
   carregarPedidos();
 })();

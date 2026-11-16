@@ -49,6 +49,15 @@ public class UsuarioRepositorio(NpgsqlDataSource db)
         u.DataCadastro = r.GetDateTime(1);
     }
 
+    public async Task AtualizarPerfilAsync(int id, string nome, string? telefone, CancellationToken ct = default)
+    {
+        await using var cmd = db.CreateCommand("UPDATE usuario SET nome = $1, telefone = $2 WHERE id_usuario = $3");
+        cmd.Parameters.AddWithValue(nome);
+        cmd.Parameters.AddWithValue((object?)telefone ?? DBNull.Value);
+        cmd.Parameters.AddWithValue(id);
+        await cmd.ExecuteNonQueryAsync(ct);
+    }
+
     public async Task AtualizarSenhaAsync(int id, string hash, CancellationToken ct = default)
     {
         await using var cmd = db.CreateCommand("UPDATE usuario SET senha_hash = $1 WHERE id_usuario = $2");
@@ -127,6 +136,62 @@ public class ProdutoRepositorio(NpgsqlDataSource db)
         cmd.Parameters.AddWithValue(id);
         return (await LerVariosAsync(cmd, ct)).FirstOrDefault();
     }
+
+    /// <summary>Item 6 do laudo: nome único, sem diferenciar maiúsculas e espaços nas pontas.</summary>
+    public async Task<bool> NomeExisteAsync(string nome, int? ignorarId, CancellationToken ct = default)
+    {
+        await using var cmd = db.CreateCommand(
+            "SELECT EXISTS (SELECT 1 FROM produto WHERE LOWER(TRIM(nome)) = LOWER(TRIM($1)) AND ($2::int IS NULL OR id_produto <> $2))");
+        cmd.Parameters.AddWithValue(nome);
+        cmd.Parameters.Add(new NpgsqlParameter { Value = (object?)ignorarId ?? DBNull.Value, NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Integer });
+        return (bool)(await cmd.ExecuteScalarAsync(ct))!;
+    }
+
+    /// <summary>Item 7 do laudo: grava (ou troca) a foto e aponta imagem_url para ela.</summary>
+    public async Task<string> SalvarImagemAsync(int idProduto, byte[] conteudo, string tipoMime, CancellationToken ct = default)
+    {
+        await using var con = await db.OpenConnectionAsync(ct);
+        await using var tx = await con.BeginTransactionAsync(ct);
+        await using (var cmd = new NpgsqlCommand(
+            "INSERT INTO produto_imagem (id_produto, conteudo, tipo_mime, tamanho) VALUES ($1, $2, $3, $4) " +
+            "ON CONFLICT (id_produto) DO UPDATE SET conteudo = EXCLUDED.conteudo, tipo_mime = EXCLUDED.tipo_mime, " +
+            "tamanho = EXCLUDED.tamanho, data_envio = CURRENT_TIMESTAMP", con, tx))
+        {
+            cmd.Parameters.AddWithValue(idProduto);
+            cmd.Parameters.AddWithValue(conteudo);
+            cmd.Parameters.AddWithValue(tipoMime);
+            cmd.Parameters.AddWithValue(conteudo.Length);
+            await cmd.ExecuteNonQueryAsync(ct);
+        }
+        // O parâmetro "v" muda a cada envio, para o navegador não mostrar a foto antiga do cache.
+        var url = $"{UrlImagem(idProduto)}?v={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+        await using (var cmd = new NpgsqlCommand("UPDATE produto SET imagem_url = $1 WHERE id_produto = $2", con, tx))
+        {
+            cmd.Parameters.AddWithValue(url);
+            cmd.Parameters.AddWithValue(idProduto);
+            await cmd.ExecuteNonQueryAsync(ct);
+        }
+        await tx.CommitAsync(ct);
+        return url;
+    }
+
+    public async Task<(byte[] Conteudo, string TipoMime)?> BuscarImagemAsync(int idProduto, CancellationToken ct = default)
+    {
+        await using var cmd = db.CreateCommand("SELECT conteudo, tipo_mime FROM produto_imagem WHERE id_produto = $1");
+        cmd.Parameters.AddWithValue(idProduto);
+        await using var r = await cmd.ExecuteReaderAsync(ct);
+        if (!await r.ReadAsync(ct)) return null;
+        return ((byte[])r[0], r.GetString(1));
+    }
+
+    public async Task RemoverImagemAsync(int idProduto, CancellationToken ct = default)
+    {
+        await using var cmd = db.CreateCommand("DELETE FROM produto_imagem WHERE id_produto = $1");
+        cmd.Parameters.AddWithValue(idProduto);
+        await cmd.ExecuteNonQueryAsync(ct);
+    }
+
+    public static string UrlImagem(int idProduto) => $"/api/produtos/{idProduto}/imagem";
 
     public async Task InserirAsync(Produto p, CancellationToken ct = default)
     {

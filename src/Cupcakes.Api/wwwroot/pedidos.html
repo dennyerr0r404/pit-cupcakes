@@ -17,20 +17,29 @@
   if (!Sessao.exigir()) return;
   montarLayout({ titulo: "Meus Pedidos", nav: "pedidos" });
   const el = $("#conteudo");
-  try {
-    const pedidos = await api("pedidos");
-    if (!pedidos.length) { el.innerHTML = telaVazia("Você ainda não fez nenhum pedido.", "Ver cupcakes", "index.html"); return; }
-    el.innerHTML = pedidos.map(p => `
-      <a class="pedido-card" href="pedido.html?id=${p.id}">
-        <div class="h"><span>Pedido #${p.id}</span><span>${moeda(p.valorTotal)}</span></div>
-        <div class="m">${dataHora(p.dataPedido)} · ${NOMES_TIPO[p.tipoEntrega]} · ${NOMES_PAGTO[p.formaPagamento]}<br>
-          ${p.itens.map(i => `${i.quantidade}× ${esc(i.produto)}`).join(", ")}</div>
-        <div style="margin-top:8px"><span class="pill st-${p.status}">${esc(p.statusRotulo)}</span></div>
-      </a>`).join("");
-  } catch (e) {
-    if (e.status === 401) { Sessao.irParaLogin(); return; }
-    el.innerHTML = telaErro(e);
+  let anteriores = {};
+
+  async function carregar() {
+    try {
+      const pedidos = await api("pedidos");
+      const mudou = pedidos.find(p => anteriores[p.id] && anteriores[p.id] !== p.status);
+      if (mudou) toast(`Pedido #${mudou.id}: ${mudou.statusRotulo}`);
+      anteriores = Object.fromEntries(pedidos.map(p => [p.id, p.status]));
+      if (!pedidos.length) { el.innerHTML = telaVazia("Você ainda não fez nenhum pedido.", "Ver cupcakes", "index.html"); return; }
+      el.innerHTML = pedidos.map(p => `
+        <a class="pedido-card" href="pedido.html?id=${p.id}">
+          <div class="h"><span>Pedido #${p.id}</span><span>${moeda(p.valorTotal)}</span></div>
+          <div class="m">${dataHora(p.dataPedido)} · ${NOMES_TIPO[p.tipoEntrega]} · ${NOMES_PAGTO[p.formaPagamento]}<br>
+            ${p.itens.map(i => `${i.quantidade}× ${esc(i.produto)}`).join(", ")}</div>
+          <div style="margin-top:8px"><span class="pill st-${p.status}">${esc(p.statusRotulo)}</span></div>
+        </a>`).join("");
+    } catch (e) {
+      if (e.status === 401) { Sessao.irParaLogin(); return false; }
+      if (!el.children.length || el.querySelector(".carregando")) el.innerHTML = telaErro(e);
+    }
   }
+  if (await carregar() !== false)
+    atualizarPeriodicamente(carregar, 30000); // Laudo, item 5
 })();
 </script>
 </body>

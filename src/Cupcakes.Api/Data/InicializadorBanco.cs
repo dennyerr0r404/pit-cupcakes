@@ -3,28 +3,38 @@ using Npgsql;
 namespace Cupcakes.Api.Data;
 
 /// <summary>
-/// Cria as tabelas e a carga inicial na primeira execução, usando os mesmos scripts
-/// de database/ que fazem parte da documentação. Se as tabelas já existem, não faz nada.
+/// Prepara o banco usando os mesmos scripts de database/ que fazem parte da documentação:
+/// na primeira execução cria as tabelas e a carga inicial (01 e 02); em toda execução
+/// aplica os scripts complementares, que podem ser repetidos com segurança (03 em diante).
 /// </summary>
 public static class InicializadorBanco
 {
+    private static readonly string[] ScriptsIniciais = ["01_schema.sql", "02_seed.sql"];
+    private static readonly string[] ScriptsComplementares = ["03_feedback.sql", "04_melhorias_laudo.sql"];
+
     public static async Task<bool> GarantirCriadoAsync(NpgsqlDataSource db, ILogger logger, CancellationToken ct = default)
     {
+        bool existe;
         await using (var cmd = db.CreateCommand("SELECT to_regclass('public.usuario') IS NOT NULL"))
-        {
-            if ((bool)(await cmd.ExecuteScalarAsync(ct))!)
-                return false;
-        }
+            existe = (bool)(await cmd.ExecuteScalarAsync(ct))!;
 
-        var pasta = Path.Combine(AppContext.BaseDirectory, "database");
-        foreach (var arquivo in new[] { "01_schema.sql", "02_seed.sql" })
-        {
-            logger.LogInformation("Executando {Arquivo}", arquivo);
-            var sql = await File.ReadAllTextAsync(Path.Combine(pasta, arquivo), ct);
-            await using var cmd = db.CreateCommand(sql);
-            await cmd.ExecuteNonQueryAsync(ct);
-        }
-        logger.LogInformation("Banco de dados criado com a carga inicial.");
-        return true;
+        if (!existe)
+            foreach (var arquivo in ScriptsIniciais)
+                await ExecutarAsync(db, arquivo, logger, ct);
+
+        foreach (var arquivo in ScriptsComplementares)
+            await ExecutarAsync(db, arquivo, logger, ct);
+
+        if (!existe)
+            logger.LogInformation("Banco de dados criado com a carga inicial.");
+        return !existe;
+    }
+
+    private static async Task ExecutarAsync(NpgsqlDataSource db, string arquivo, ILogger logger, CancellationToken ct)
+    {
+        logger.LogInformation("Executando {Arquivo}", arquivo);
+        var sql = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "database", arquivo), ct);
+        await using var cmd = db.CreateCommand(sql);
+        await cmd.ExecuteNonQueryAsync(ct);
     }
 }

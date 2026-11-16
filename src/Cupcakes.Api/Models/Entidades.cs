@@ -6,6 +6,13 @@ public class RegraNegocioException(string mensagem, int statusCode = 400) : Exce
     public int StatusCode { get; } = statusCode;
 }
 
+/// <summary>Erro de regra ligado a um campo do formulário (a tela destaca o campo).</summary>
+public class CampoInvalidoException(string campo, string mensagem, int statusCode = 400)
+    : RegraNegocioException(mensagem, statusCode)
+{
+    public string Campo { get; } = campo;
+}
+
 public class Usuario
 {
     public int IdUsuario { get; set; }
@@ -118,6 +125,44 @@ public class ItemPedido
 
     /// <summary>Subtotal: no banco é a coluna calculada quantidade × preco_unitario.</summary>
     public decimal CalcularSubtotal() => Quantidade * PrecoUnitario;
+}
+
+/// <summary>Opinião do cliente sobre um produto ou sobre o atendimento (RF12).</summary>
+public class Feedback
+{
+    public const int TamanhoMinimoComentario = 3;
+    public const int TamanhoMaximoComentario = 1000;
+
+    public int IdFeedback { get; set; }
+    public int IdUsuario { get; set; }
+    public int? IdPedido { get; set; }
+    public int? IdProduto { get; set; }
+    public AssuntoFeedback Assunto { get; set; }
+    public int Nota { get; set; }
+    public string Comentario { get; set; } = "";
+    public DateTime DataEnvio { get; set; }
+    public bool Lido { get; set; }
+
+    // Dados de exibição (preenchidos nas consultas)
+    public string? NomeProduto { get; set; }
+    public string? NomeCliente { get; set; }
+    public string? EmailCliente { get; set; }
+
+    /// <summary>Valida as regras que não dependem do banco.</summary>
+    public void Validar()
+    {
+        if (Nota is < 1 or > 5)
+            throw new RegraNegocioException("Escolha uma nota de 1 a 5 estrelas.");
+        Comentario = (Comentario ?? "").Trim();
+        if (Comentario.Length < TamanhoMinimoComentario)
+            throw new RegraNegocioException("Escreva um comentário com pelo menos 3 caracteres.");
+        if (Comentario.Length > TamanhoMaximoComentario)
+            throw new RegraNegocioException("O comentário deve ter no máximo 1000 caracteres.");
+        if (Assunto == AssuntoFeedback.Produto && IdProduto is null)
+            throw new RegraNegocioException("Escolha o produto que você quer avaliar.");
+        if (Assunto == AssuntoFeedback.Atendimento)
+            IdProduto = null;
+    }
 }
 
 /// <summary>Transições de status permitidas (seção 12.1 da documentação).</summary>

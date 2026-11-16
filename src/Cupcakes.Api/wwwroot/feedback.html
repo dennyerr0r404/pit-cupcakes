@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Enviar feedback · Cupcakes Gourmet</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <main id="conteudo"><div class="carregando">Carregando…</div></main>
+</div>
+<script src="js/core.js"></script>
+<script>
+(async () => {
+  if (!Sessao.exigir()) return;
+  montarLayout({ titulo: "Enviar Feedback", voltar: true, nav: "perfil" });
+  const el = $("#conteudo");
+  const idPedido = Number(params.get("pedido")) || null;
+  const idProdutoInicial = Number(params.get("produto")) || null;
+  const ROTULOS = ["", "Péssimo", "Ruim", "Regular", "Bom", "Ótimo"];
+
+  // Produtos que podem ser avaliados: os itens do pedido ou, sem pedido, o catálogo.
+  let pedido = null, opcoes = [];
+  try {
+    if (idPedido) {
+      pedido = await api(`pedidos/${idPedido}`);
+      opcoes = pedido.itens.map(i => ({ id: i.produtoId, nome: i.produto }));
+    } else {
+      opcoes = (await api("produtos")).map(p => ({ id: p.id, nome: p.nome }));
+    }
+  } catch (e) {
+    if (e.status === 401) { Sessao.irParaLogin(); return; }
+    el.innerHTML = telaErro(e); return;
+  }
+  const produtoValido = opcoes.some(o => o.id === idProdutoInicial);
+
+  el.innerHTML = `
+    <p class="nota" style="margin-bottom:14px">${pedido
+      ? `Sua opinião sobre o <b>pedido #${pedido.id}</b> ajuda a loja a melhorar.`
+      : "Conte o que achou de um cupcake ou do nosso atendimento."}</p>
+    <form id="form" novalidate>
+      <div id="alerta"></div>
+      <fieldset style="border:none" class="campo" data-campo="assunto">
+        <legend class="rotulo">Sobre o que é o seu feedback?</legend>
+        <div class="seg">
+          <label><input type="radio" name="assunto" value="PRODUTO" ${idProdutoInicial || pedido ? "checked" : ""}> Produto</label>
+          <label><input type="radio" name="assunto" value="ATENDIMENTO" ${idProdutoInicial || pedido ? "" : "checked"}> Atendimento</label>
+        </div>
+        <div class="erro"></div>
+      </fieldset>
+      <div class="campo" data-campo="produtoId" id="blocoProduto">
+        <label for="produto">Produto *</label>
+        <select id="produto" name="produto">
+          <option value="">Selecione o cupcake…</option>
+          ${opcoes.map(o => `<option value="${o.id}" ${(produtoValido ? o.id === idProdutoInicial : opcoes.length === 1) ? "selected" : ""}>${esc(o.nome)}</option>`).join("")}
+        </select>
+        <div class="erro"></div>
+      </div>
+      <p class="dica" id="dicaAtendimento" hidden style="margin:-6px 0 14px">Atendimento inclui pedido, preparo, entrega ou retirada e contato com a loja.</p>
+      <fieldset style="border:none" class="campo" data-campo="nota">
+        <legend class="rotulo">Sua nota *</legend>
+        <div class="estrelas" role="radiogroup" aria-label="Nota de 1 a 5 estrelas">
+          ${[1, 2, 3, 4, 5].map(n => `<label title="${ROTULOS[n]}"><input type="radio" name="nota" value="${n}"><span aria-hidden="true">★</span><span class="sr-only">${n} estrela${n > 1 ? "s" : ""} – ${ROTULOS[n]}</span></label>`).join("")}
+          <span class="rotulo-nota" id="rotuloNota"></span>
+        </div>
+        <div class="erro"></div>
+      </fieldset>
+      <div class="campo" data-campo="comentario">
+        <label for="comentario">Comentário *</label>
+        <textarea id="comentario" name="comentario" rows="4" maxlength="1000" placeholder="O que você gostou? O que podemos melhorar?"></textarea>
+        <div class="dica" style="text-align:right"><span id="contador">0</span>/1000</div>
+        <div class="erro"></div>
+      </div>
+      <button class="btn" type="submit">Enviar feedback</button>
+    </form>
+    <section id="enviados" style="margin-top:26px"></section>`;
+
+  const f = $("#form");
+  const ajustarAssunto = () => {
+    const produto = f.assunto.value === "PRODUTO";
+    $("#blocoProduto").hidden = !produto;
+    $("#dicaAtendimento").hidden = produto;
+  };
+  $$("input[name=assunto]", f).forEach(r => r.addEventListener("change", ajustarAssunto));
+  ajustarAssunto();
+
+  const pintarEstrelas = () => {
+    const n = Number(f.nota.value) || 0;
+    $$(".estrelas label").forEach((l, i) => l.classList.toggle("acesa", i < n));
+    $("#rotuloNota").textContent = ROTULOS[n] || "";
+  };
+  $$("input[name=nota]", f).forEach(r => r.addEventListener("change", pintarEstrelas));
+  f.comentario.addEventListener("input", () => { $("#contador").textContent = f.comentario.value.length; });
+
+  f.addEventListener("submit", async e => {
+    e.preventDefault();
+    limparErros(f); $("#alerta").innerHTML = "";
+    const corpo = {
+      assunto: f.assunto.value,
+      nota: Number(f.nota.value) || 0,
+      comentario: f.comentario.value.trim(),
+      pedidoId: idPedido,
+      produtoId: f.assunto.value === "PRODUTO" ? Number(f.produto.value) || null : null,
+    };
+    let ok = true;
+    if (corpo.assunto === "PRODUTO" && !corpo.produtoId) { marcarCampo(f, "produtoId", "Escolha o produto que você quer avaliar."); ok = false; }
+    if (!corpo.nota) { marcarCampo(f, "nota", "Escolha uma nota de 1 a 5 estrelas."); ok = false; }
+    if (corpo.comentario.length < 3) { marcarCampo(f, "comentario", "Escreva um comentário com pelo menos 3 caracteres."); ok = false; }
+    if (!ok) return;
+
+    const b = $("button[type=submit]", f); b.disabled = true; b.textContent = "Enviando…";
+    try {
+      await api("feedbacks", { metodo: "POST", corpo });
+      f.reset(); pintarEstrelas(); ajustarAssunto(); $("#contador").textContent = "0";
+      $("#alerta").innerHTML = '<div class="aviso ok" role="status">✓ Obrigado! Seu feedback foi enviado para a loja.</div>';
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      carregarEnviados();
+    } catch (err) {
+      if (err.status === 401) { Sessao.irParaLogin(); return; }
+      if (!mostrarErros(f, err)) $("#alerta").innerHTML = `<div class="aviso erro" role="alert">${esc(err.message)}</div>`;
+    } finally { b.disabled = false; b.textContent = "Enviar feedback"; }
+  });
+
+  async function carregarEnviados() {
+    try {
+      const lista = await api("feedbacks");
+      $("#enviados").innerHTML = !lista.length ? "" : `
+        <h2 style="font-size:16px;margin-bottom:10px">Feedbacks que você enviou</h2>
+        ${lista.map(cartaoFeedback).join("")}`;
+    } catch { /* lista é complementar */ }
+  }
+  carregarEnviados();
+})();
+</script>
+</body>
+</html>

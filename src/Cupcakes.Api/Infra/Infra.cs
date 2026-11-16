@@ -15,9 +15,21 @@ public class TratamentoErrosMiddleware(RequestDelegate next, ILogger<TratamentoE
         {
             await next(ctx);
         }
+        catch (CampoInvalidoException ex)
+        {
+            await Erros.Escrever(ctx.Response, ex.StatusCode, ex.Message, ex.Campo);
+        }
         catch (RegraNegocioException ex)
         {
             await Erros.Escrever(ctx.Response, ex.StatusCode, ex.Message);
+        }
+        catch (PostgresException pg) when (pg.ConstraintName == "uq_produto_nome")
+        {
+            await Erros.Escrever(ctx.Response, 409, "Já existe um produto com este nome.", "nome");
+        }
+        catch (PostgresException pg) when (pg.ConstraintName == "ck_usuario_telefone")
+        {
+            await Erros.Escrever(ctx.Response, 400, Telefone.MensagemInvalido, "telefone");
         }
         catch (PostgresException pg)
         {
@@ -45,12 +57,15 @@ public static class Erros
     /// <summary>JSON com acentos legíveis (sem \u00E7 etc.).</summary>
     public static readonly JsonSerializerOptions Json = new() { Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
 
-    public static async Task Escrever(HttpResponse resp, int status, string mensagem)
+    public static async Task Escrever(HttpResponse resp, int status, string mensagem, string? campo = null)
     {
         if (resp.HasStarted) return;
         resp.StatusCode = status;
         resp.ContentType = "application/json; charset=utf-8";
-        await resp.WriteAsync(JsonSerializer.Serialize(new { mensagem }, Json));
+        object corpo = campo is null
+            ? new { mensagem }
+            : new { mensagem, erros = new Dictionary<string, string[]> { [campo] = [mensagem] } };
+        await resp.WriteAsync(JsonSerializer.Serialize(corpo, Json));
     }
 
     /// <summary>"$.itens[0].quantidade" / "Itens[0].Quantidade" -> "itens[0].quantidade"</summary>

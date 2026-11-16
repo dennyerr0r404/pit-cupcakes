@@ -24,7 +24,8 @@
       </div>
       <div class="campo" data-campo="telefone">
         <label for="telefone">Telefone</label>
-        <input id="telefone" name="telefone" type="tel" autocomplete="tel" maxlength="20" placeholder="(11) 99999-0000">
+        <input id="telefone" name="telefone" type="tel" autocomplete="tel" maxlength="20" placeholder="(11) 98888-7777">
+        <div class="dica">Opcional. Com DDD: celular ou fixo.</div>
         <div class="erro"></div>
       </div>
       <div class="campo" data-campo="senha">
@@ -48,6 +49,7 @@
   montarLayout({ titulo: "Criar conta", voltar: true, nav: "perfil" });
   const voltar = params.get("voltar");
   const destino = voltar && /^[a-z0-9_-]+\.html/i.test(voltar) ? voltar : "index.html";
+  mascaraTelefone($("#telefone"));
   if (voltar) $("#linkLogin").href = "login.html?voltar=" + encodeURIComponent(voltar);
 
   $("#form").addEventListener("submit", async e => {
@@ -57,6 +59,7 @@
     let ok = true;
     if (d.nome.length < 2) { marcarCampo(f, "nome", "Informe seu nome."); ok = false; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email)) { marcarCampo(f, "email", "Informe um e-mail válido."); ok = false; }
+    if (!telefoneValido(d.telefone)) { marcarCampo(f, "telefone", "Informe o telefone com DDD, ex.: (11) 98888-7777."); ok = false; }
     if (d.senha.length < 6) { marcarCampo(f, "senha", "A senha deve ter pelo menos 6 caracteres."); ok = false; }
     if (f.confirmacao.value !== d.senha) { marcarCampo(f, "confirmacao", "As senhas não conferem."); ok = false; }
     if (!ok) return;

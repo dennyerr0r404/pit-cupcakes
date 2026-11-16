@@ -68,11 +68,15 @@ class ErroApi extends Error {
 
 async function api(caminho, { metodo = "GET", corpo } = {}) {
   const headers = { "Accept": "application/json" };
-  if (corpo !== undefined) headers["Content-Type"] = "application/json";
+  const arquivo = corpo instanceof FormData;   // envio de arquivo (multipart)
+  if (corpo !== undefined && !arquivo) headers["Content-Type"] = "application/json";
 
   let resp;
   try {
-    resp = await fetch("/api/" + caminho, { method: metodo, headers, body: corpo !== undefined ? JSON.stringify(corpo) : undefined });
+    resp = await fetch("/api/" + caminho, {
+      method: metodo, headers,
+      body: corpo === undefined ? undefined : arquivo ? corpo : JSON.stringify(corpo),
+    });
   } catch {
     throw new ErroApi(0, "Sem conexão com o servidor. Verifique sua internet e tente novamente.");
   }
@@ -201,3 +205,68 @@ function limparErros(form) { $$(".campo", form).forEach(c => c.classList.remove(
 ["input", "change"].forEach(ev => document.addEventListener(ev, e => {
   e.target.closest?.(".campo")?.classList.remove("invalido");
 }));
+
+// ---------- Feedback ----------
+const NOMES_ASSUNTO = { PRODUTO: "Produto", ATENDIMENTO: "Atendimento" };
+
+/** Estrelas da nota (ex.: ★★★★☆) com texto alternativo. */
+function estrelas(nota) {
+  return `<span class="nota-estrelas" aria-label="${nota} de 5 estrelas" title="${nota} de 5">` +
+    `<span aria-hidden="true">${"★".repeat(nota)}<span class="apagadas">${"★".repeat(5 - nota)}</span></span></span>`;
+}
+
+/** Cartão de um feedback; com admin=true mostra cliente e botão de lido. */
+function cartaoFeedback(fb, admin = false) {
+  const sobre = fb.assunto === "PRODUTO" ? `Produto: ${esc(fb.produto || "removido")}` : "Atendimento";
+  return `<article class="feedback-card ${admin && !fb.lido ? "nao-lido" : ""}">
+    <div class="h">${estrelas(fb.nota)}<span class="tag">${sobre}</span></div>
+    <p class="texto">${esc(fb.comentario)}</p>
+    <div class="m">${dataHora(fb.dataEnvio)}${fb.pedidoId ? ` · Pedido #${fb.pedidoId}` : ""}${
+      admin ? `<br>${esc(fb.cliente)} · ${esc(fb.clienteEmail)}` : ""}</div>
+    ${admin ? `<div class="acoes-status">
+      ${fb.lido ? '<span class="pill st-ENTREGUE">Lido</span>' : '<span class="pill st-RECEBIDO">Novo</span>'}
+      <button type="button" class="btn sec peq" data-lido="${fb.id}" data-valor="${!fb.lido}">${fb.lido ? "Marcar como não lido" : "Marcar como lido"}</button>
+    </div>` : ""}
+  </article>`;
+}
+
+// ---------- Atualização automática (Laudo, item 5) ----------
+/**
+ * Executa fn a cada "ms" milissegundos enquanto a aba estiver visível, e logo que
+ * ela volta a ficar visível. fn pode devolver false para parar.
+ */
+function atualizarPeriodicamente(fn, ms = 30000) {
+  let timer = null, parado = false;
+  const agendar = () => { clearTimeout(timer); if (!parado) timer = setTimeout(rodar, ms); };
+  const rodar = async () => {
+    if (parado) return;
+    if (document.hidden) { agendar(); return; }
+    try { if (await fn() === false) { parado = true; return; } } catch { /* tenta de novo no próximo ciclo */ }
+    agendar();
+  };
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && !parado) { clearTimeout(timer); rodar(); } });
+  agendar();
+  return { parar() { parado = true; clearTimeout(timer); } };
+}
+
+// ---------- Telefone (Laudo, item 2) ----------
+/** Formata enquanto digita: (11) 98888-7777 ou (11) 3333-4444. */
+function mascaraTelefone(input) {
+  input.setAttribute("inputmode", "tel");
+  input.addEventListener("input", () => {
+    let d = input.value.replace(/\D/g, "");
+    if (d.length > 11 && d.startsWith("55")) d = d.slice(2);
+    d = d.slice(0, 11);
+    let v = d;
+    if (d.length > 2) v = `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    if (d.length > 6) v = d.length === 11
+      ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`
+      : `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+    input.value = v;
+  });
+}
+/** Vazio é aceito (campo opcional); senão exige DDD + celular (9 dígitos começando com 9) ou fixo (8 dígitos). */
+function telefoneValido(texto) {
+  const t = (texto || "").trim();
+  return !t || /^\([1-9][0-9]\) (9\d{4}|[2-8]\d{3})-\d{4}$/.test(t);
+}

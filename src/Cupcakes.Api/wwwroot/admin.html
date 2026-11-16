@@ -18,6 +18,7 @@
     <div class="admin-abas" role="tablist">
       <button type="button" data-aba="pedidos" class="ativo" role="tab">Pedidos</button>
       <button type="button" data-aba="produtos" role="tab">Produtos</button>
+      <button type="button" data-aba="feedbacks" role="tab">Feedbacks<span class="cont-aba" id="contFeedback"></span></button>
     </div>
 
     <section id="abaPedidos">
@@ -30,6 +31,17 @@
         <button class="btn sec peq" id="recarregar" type="button">Atualizar</button>
       </div>
       <div id="listaPedidos" aria-live="polite"></div>
+    </section>
+
+    <section id="abaFeedbacks" hidden>
+      <div class="resumo-cards" id="resumoFeedback"></div>
+      <div class="barra">
+        <div class="filtros" id="filtrosFeedback">
+          <button type="button" data-sit="nao_lidos" class="ativo">Não lidos</button>
+          <button type="button" data-sit="">Todos</button>
+        </div>
+      </div>
+      <div id="listaFeedbacks" class="grade-admin" aria-live="polite"></div>
     </section>
 
     <section id="abaProdutos" hidden>
@@ -70,8 +82,19 @@
     </div>
     <div class="campo" data-campo="imagemUrl">
       <label for="pImagem">Imagem</label>
-      <select id="pImagem" name="imagem"></select>
-      <input id="pImagemUrl" name="imagemUrl" maxlength="255" placeholder="https://… ou /img/arquivo.svg" style="margin-top:8px" hidden>
+      <div class="imagem-produto">
+        <div class="preview-imagem"><img id="pPreview" alt="Pré-visualização da imagem do produto"></div>
+        <div style="flex:1;min-width:0">
+          <select id="pImagem" name="imagem"></select>
+          <input id="pImagemUrl" name="imagemUrl" maxlength="255" placeholder="https://… ou /img/arquivo.svg" style="margin-top:8px" hidden>
+        </div>
+      </div>
+      <div class="erro"></div>
+    </div>
+    <div class="campo" data-campo="arquivo">
+      <label class="btn sec peq botao-arquivo" for="pArquivo">📷 Enviar foto do computador</label>
+      <input id="pArquivo" name="arquivo" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only">
+      <div class="dica" id="pArquivoInfo">JPG, PNG ou WebP, até 2 MB. Substitui a imagem escolhida acima.</div>
       <div class="erro"></div>
     </div>
     <div class="campo" data-campo="descricao">

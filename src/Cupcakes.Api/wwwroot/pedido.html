@@ -18,15 +18,19 @@
   montarLayout({ titulo: "Status do Pedido", voltar: "pedidos.html", nav: "pedidos" });
   const el = $("#conteudo");
   const id = Number(params.get("id"));
+  let statusAnterior = null;
 
   async function carregar() {
     try {
       const p = await api(`pedidos/${id}`);
+      if (statusAnterior && statusAnterior !== p.status) toast(`Seu pedido agora está: ${p.statusRotulo}`);
+      statusAnterior = p.status;
       const novo = params.get("novo") === "1";
       const aberto = !["ENTREGUE", "CANCELADO"].includes(p.status);
       el.innerHTML = `
         ${novo ? `<div class="aviso ok" role="status">✓ Pedido confirmado! Número #${p.id}</div>` : `<h2 style="font-size:18px;margin-bottom:6px">Pedido #${p.id}</h2>`}
         <div class="meta"><span>${dataHora(p.dataPedido)}</span><span>${NOMES_TIPO[p.tipoEntrega]} · ${NOMES_PAGTO[p.formaPagamento]}</span></div>
+        ${aberto ? '<p class="dica auto-atualiza" style="margin:-6px 0 10px">↻ O status é atualizado automaticamente a cada 30 segundos.</p>' : ""}
         <div class="linha-tempo">
           ${p.etapas.map((e, i) => `
             <div class="etapa ${e.concluida ? "feita" : ""} ${e.atual ? "atual" : ""} ${e.status === "CANCELADO" ? "cancelado" : ""}">
@@ -42,15 +46,18 @@
           ${p.itens.map(i => `<div><span>${esc(i.produto)} × ${i.quantidade}</span><span>${moeda(i.subtotal)}</span></div>`).join("")}
           <div class="total"><span>${p.status === "CANCELADO" ? "Total" : aberto ? `Total a pagar na ${p.tipoEntrega === "ENTREGA" ? "entrega" : "retirada"}` : "Total pago"}</span><span>${moeda(p.valorTotal)}</span></div>
         </div>
-        ${aberto ? '<button class="btn sec" id="atualizar" type="button" style="margin-top:12px">Atualizar status</button>' : ""}
+        ${aberto ? '<button class="btn sec" id="atualizar" type="button" style="margin-top:12px">Atualizar agora</button>' : ""}
+        ${p.status !== "CANCELADO" ? `<a class="btn sec" href="feedback.html?pedido=${p.id}" style="margin-top:10px">★ Avaliar produto ou atendimento</a>` : ""}
         <a class="btn" href="index.html" style="margin-top:10px">Continuar comprando</a>`;
-      $("#atualizar")?.addEventListener("click", () => { carregar(); toast("Status atualizado"); });
+      $("#atualizar")?.addEventListener("click", () => carregar());
+      return aberto; // pedido concluído ou cancelado: para de atualizar
     } catch (e) {
       if (e.status === 401) { Sessao.irParaLogin(); return; }
       el.innerHTML = telaErro(e) + telaVazia("", "Ver meus pedidos", "pedidos.html");
     }
   }
-  carregar();
+  if (await carregar() !== false)
+    atualizarPeriodicamente(carregar, 30000);
 })();
 </script>
 </body>

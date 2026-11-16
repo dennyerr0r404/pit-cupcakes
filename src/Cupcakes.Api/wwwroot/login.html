@@ -11,6 +11,7 @@
 <div class="app">
   <main>
     <p class="nota" id="motivo" style="margin-bottom:16px" hidden>Entre na sua conta para finalizar o pedido.</p>
+    <div class="aviso ok" id="redefinida" role="status" hidden>✓ Senha alterada. Entre com a nova senha.</div>
     <form id="form" novalidate>
       <div id="alerta"></div>
       <div class="campo" data-campo="email">
@@ -23,6 +24,7 @@
         <input id="senha" name="senha" type="password" autocomplete="current-password" required>
         <div class="erro"></div>
       </div>
+      <p style="text-align:right;margin:-4px 0 14px"><a class="link" href="esqueci-senha.html" style="font-size:14px">Esqueci minha senha</a></p>
       <button class="btn" type="submit">Entrar</button>
       <p class="form-rodape">Ainda não tem conta? <a class="link" id="linkCadastro" href="cadastro.html">Cadastre-se</a></p>
     </form>
@@ -33,6 +35,7 @@
   montarLayout({ titulo: "Entrar", voltar: true, nav: "perfil" });
   const voltar = params.get("voltar");
   const destino = voltar && /^[a-z0-9_-]+\.html/i.test(voltar) ? voltar : "perfil.html";
+  if (params.get("redefinida") === "1") $("#redefinida").hidden = false;
   if (voltar) { $("#motivo").hidden = false; $("#linkCadastro").href = "cadastro.html?voltar=" + encodeURIComponent(voltar); }
   if (Sessao.atual()) location.replace(destino);
 

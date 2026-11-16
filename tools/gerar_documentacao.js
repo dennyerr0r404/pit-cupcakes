@@ -9,7 +9,7 @@ const {
 } = require("docx");
 
 const ROOT = path.resolve(__dirname, "..");
-const OUT = process.argv[2] || path.join(ROOT, "entregas", "PIT_Software_II_Documentacao_Cupcakes_v3.docx");
+const OUT = process.argv[2] || path.join(ROOT, "entregas", "PIT_Software_II_Documentacao_Cupcakes_v4.docx");
 const TEAL = "2F6F6C";
 const W = 9026; // largura útil A4 com margens de 2,5 cm (DXA)
 
@@ -66,7 +66,7 @@ c.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 1800 }
   children: [new TextRun({ text: "Aplicativo para loja de cupcakes gourmet", size: 28, bold: true })] }));
 c.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Aluno: Denis Santana Ribeiro dos Santos", size: 24 })] }));
 c.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "RGM: 33146802", size: 24 })] }));
-c.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200 }, children: [new TextRun({ text: "Versão 3 — Situações-problema 1 e 2 (planejamento e implementação)", size: 20, color: "555555" })] }));
+c.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200 }, children: [new TextRun({ text: "Versão 4 — Situações-problema 1 e 2, com feedback do cliente", size: 20, color: "555555" })] }));
 c.push(new Paragraph({ children: [new PageBreak()] }));
 
 // 1
@@ -135,6 +135,7 @@ c.push(table(["ID", "Requisito", "Critério de aceitação resumido"], [
   ["RF09", "Validar entradas", "Campos obrigatórios e valores inválidos geram mensagens claras e não são aceitos."],
   ["RF10", "Confirmar operação", "Após registrar o pedido, o sistema exibe a confirmação e o número do pedido."],
   ["RF11", "Filtrar catálogo por categoria", "O cliente seleciona uma categoria e vê apenas os produtos dela."],
+  ["RF12", "Enviar feedback", "O cliente autenticado envia nota de 1 a 5 e comentário sobre um produto ou sobre o atendimento, opcionalmente ligado a um pedido seu; o administrador consulta os feedbacks, vê as médias e marca como lidos."],
 ], [800, 2500, W - 3300]));
 
 // 7
@@ -159,7 +160,9 @@ c.push(H1("8. Histórias de usuário"));
  "Como cliente, quero receber uma confirmação após finalizar o pedido para saber que ele foi registrado.",
  "Como cliente, quero acompanhar o status do pedido para saber em que etapa ele está.",
  "Como administrador, quero cadastrar e atualizar produtos para manter o catálogo correto.",
- "Como administrador, quero atualizar o status dos pedidos para informar o andamento da compra."].forEach(t => c.push(B(t)));
+ "Como administrador, quero atualizar o status dos pedidos para informar o andamento da compra.",
+ "Como cliente, quero dar uma nota e comentar um produto ou o atendimento para contar à loja o que achei.",
+ "Como administrador, quero ler os feedbacks e acompanhar as médias para melhorar produtos e atendimento."].forEach(t => c.push(B(t)));
 
 // 9
 c.push(H1("9. Metodologia e organização do trabalho"));
@@ -185,15 +188,15 @@ c.push(P("A autenticação usa um cookie de sessão HttpOnly (inacessível ao Ja
 // 11
 c.push(H1("11. Diagramas UML"));
 c.push(H2("11.1 Diagrama de casos de uso"));
-c.push(P("Atores: Cliente e Administrador, fora da fronteira do sistema. As associações entre ator e caso de uso são linhas simples. “Filtrar por categoria” estende “Visualizar catálogo” («extend»), pois é opcional. “Finalizar pedido” inclui “Escolher entrega/retirada e forma de pagamento” («include»), pois essa etapa sempre acontece. Finalizar e acompanhar pedidos têm como pré-condição o cliente estar autenticado."));
+c.push(P("Atores: Cliente e Administrador, fora da fronteira do sistema. As associações entre ator e caso de uso são linhas simples. “Filtrar por categoria” estende “Visualizar catálogo” («extend»), pois é opcional. “Finalizar pedido” inclui “Escolher entrega/retirada e forma de pagamento” («include»), pois essa etapa sempre acontece. O cliente também pode “Enviar feedback” sobre um produto ou o atendimento, e o administrador pode “Consultar feedbacks”. Finalizar e acompanhar pedidos têm como pré-condição o cliente estar autenticado."));
 c.push(...img(D("diagramas/casos-de-uso.png"), 600, "Figura 1 – Diagrama de casos de uso"));
 c.push(H2("11.2 Diagrama de classes"));
-c.push(P("Classes: Usuario, Categoria, Produto, Pedido e ItemPedido, mais quatro enumerações. Relações: Usuario 1 — 0..* Pedido; Categoria 1 — 0..* Produto; Pedido 1 ◆— 1..* ItemPedido (composição: os itens não existem sem o pedido); Produto 1 — 0..* ItemPedido. ItemPedido funciona como classe associativa entre Pedido e Produto e guarda a quantidade e o preço unitário do momento da compra. A ligação direta Pedido–Produto foi removida. Valores em dinheiro usam decimal."));
+c.push(P("Classes: Usuario, Categoria, Produto, Pedido, ItemPedido e Feedback, mais cinco enumerações. Relações: Usuario 1 — 0..* Pedido; Usuario 1 — 0..* Feedback; Feedback 0..* — 0..1 Produto e 0..1 Pedido; Categoria 1 — 0..* Produto; Pedido 1 ◆— 1..* ItemPedido (composição: os itens não existem sem o pedido); Produto 1 — 0..* ItemPedido. ItemPedido funciona como classe associativa entre Pedido e Produto e guarda a quantidade e o preço unitário do momento da compra. A ligação direta Pedido–Produto foi removida. Valores em dinheiro usam decimal."));
 c.push(...img(D("diagramas/classes.png"), 600, "Figura 2 – Diagrama de classes"));
 
 // 12
 c.push(H1("12. Modelo de dados"));
-c.push(P("O modelo lógico tem cinco tabelas. Os nomes seguem o padrão do PostgreSQL (minúsculas com sublinhado). O script físico está no repositório em database/01_schema.sql, e a carga inicial em database/02_seed.sql."));
+c.push(P("O modelo lógico tem seis tabelas. Os nomes seguem o padrão do PostgreSQL (minúsculas com sublinhado). O script físico está no repositório em database/01_schema.sql, a carga inicial em database/02_seed.sql e a tabela de feedback em database/03_feedback.sql (aplicada automaticamente também em bancos já existentes)."));
 c.push(...img(D("diagramas/der.png"), 470, "Figura 3 – Modelo lógico (DER)"));
 c.push(table(["Tabela", "Regras principais"], [
   ["usuario", "E-mail único e em minúsculas; senha guardada apenas como hash; perfil CLIENTE ou ADMIN."],
@@ -201,6 +204,7 @@ c.push(table(["Tabela", "Regras principais"], [
   ["produto", "Pertence a uma categoria; preço e estoque não negativos; produto inativo não aparece para compra."],
   ["pedido", "Pertence a um usuário; status, tipo de entrega e forma de pagamento restritos a valores definidos; endereço obrigatório quando o tipo é ENTREGA; status compatível com o tipo de entrega."],
   ["item_pedido", "Quantidade maior que zero; um produto aparece no máximo uma vez por pedido; preço unitário copiado no momento da compra; subtotal calculado pelo banco."],
+  ["feedback", "Pertence a um usuário; assunto PRODUTO ou ATENDIMENTO; nota de 1 a 5; comentário com pelo menos 3 caracteres; produto obrigatório quando o assunto é PRODUTO; pedido e produto opcionais."],
 ], [1700, W - 1700]));
 c.push(gap());
 c.push(H2("12.1 Fluxo de status do pedido"));
@@ -254,6 +258,15 @@ const dic = [
   ["item_pedido.quantidade", "INT", "Sim", "Quantidade comprada; maior que zero."],
   ["item_pedido.preco_unitario", "NUMERIC(10,2)", "Sim", "Preço do produto no momento da compra."],
   ["item_pedido.subtotal", "NUMERIC(10,2), calculado", "Automático", "quantidade × preco_unitario, gerado pelo banco."],
+  ["feedback.id_feedback", "INT identity, PK", "Sim", "Identificador do feedback."],
+  ["feedback.id_usuario", "INT, FK → usuario", "Sim", "Cliente que enviou; excluído junto com o usuário."],
+  ["feedback.id_pedido", "INT, FK → pedido", "Não", "Pedido a que o feedback se refere (do próprio cliente)."],
+  ["feedback.id_produto", "INT, FK → produto", "Condicional", "Produto avaliado; obrigatório quando o assunto é PRODUTO."],
+  ["feedback.assunto", "VARCHAR(20)", "Sim", "PRODUTO ou ATENDIMENTO."],
+  ["feedback.nota", "SMALLINT", "Sim", "Nota de 1 a 5 estrelas."],
+  ["feedback.comentario", "VARCHAR(1000)", "Sim", "Opinião do cliente; de 3 a 1000 caracteres."],
+  ["feedback.data_envio", "TIMESTAMPTZ", "Sim", "Data e hora do envio (padrão: agora)."],
+  ["feedback.lido", "BOOLEAN", "Sim", "Indica se o administrador já leu (padrão falso)."],
 ];
 c.push(table(["Tabela.campo", "Tipo", "Obrigatório", "Descrição / regra"], dic, [2600, 2000, 1150, W - 5750], { size: 17 }));
 
@@ -287,12 +300,13 @@ c.push(table(["Tela", "Elementos e comportamento", "Requisitos"], [
   ["Carrinho", "Itens com preço unitário, quantidade editável, subtotal, remoção e total.", "RF03"],
   ["Finalização", "Entrega ou retirada, endereço (obrigatório na entrega), forma de pagamento, observação, resumo e confirmação.", "RF04, RF05, RF09"],
   ["Status do pedido", "Confirmação com número, linha do tempo do status e resumo do valor a pagar.", "RF06, RF10"],
-  ["Administração", "Pedidos abertos com status e alteração de status; aba de produtos para cadastro e edição.", "RF07, RF08"],
+  ["Administração", "Pedidos abertos com status e alteração de status; aba de produtos para cadastro e edição; aba de feedbacks com médias.", "RF07, RF08, RF12"],
+  ["Feedback", "Assunto (produto ou atendimento), produto, nota em estrelas, comentário com contador e lista dos feedbacks enviados. Acessado pelo pedido, pelo perfil e pelo detalhe do produto.", "RF12"],
 ], [1900, W - 3300, 1400]));
 
 // 16
 c.push(H1("16. Plano e resultado dos testes"));
-c.push(P("Os casos foram executados em 21/10/2026 de duas formas: **automatizada** (xUnit, aplicação e PostgreSQL reais, comando dotnet test) e **no navegador** (Playwright, percorrendo as telas como um usuário). Todos foram aprovados."));
+c.push(P("Os casos CT01 a CT14 foram executados em 21/10/2026 e os casos CT15 a CT17 em 12/11/2026, de duas formas: **automatizada** (xUnit, aplicação e PostgreSQL reais, comando dotnet test) e **no navegador** (Playwright, percorrendo as telas como um usuário). Todos foram aprovados."));
 c.push(table(["ID", "Cenário", "Resultado esperado", "Execução", "Resultado"], [
   ["CT01", "Abrir catálogo com produtos ativos", "Os produtos ativos aparecem com nome, imagem e preço.", "xUnit + navegador", "Aprovado"],
   ["CT02", "Filtrar por uma categoria", "Somente os produtos daquela categoria são exibidos.", "xUnit + navegador", "Aprovado"],
@@ -308,22 +322,26 @@ c.push(table(["ID", "Cenário", "Resultado esperado", "Execução", "Resultado"]
   ["CT12", "Administrador altera o status do pedido (e cancela)", "O novo status é salvo e aparece para o cliente; cancelamento devolve o estoque.", "xUnit + navegador", "Aprovado"],
   ["CT13", "Enviar preço ou total alterado pela interface", "O servidor recalcula o total com os preços do banco.", "xUnit", "Aprovado"],
   ["CT14", "Cadastrar-se com e-mail já usado", "O sistema informa que o e-mail já está cadastrado.", "xUnit + navegador", "Aprovado"],
+  ["CT15", "Enviar feedback de produto do pedido e de atendimento", "O feedback é gravado e aparece na lista do cliente.", "xUnit + navegador", "Aprovado"],
+  ["CT16", "Enviar feedback inválido (sem nota, nota fora de 1 a 5, comentário curto, sem produto, produto fora do pedido, pedido de outro cliente, sem login)", "O sistema recusa e indica o problema.", "xUnit + navegador", "Aprovado"],
+  ["CT17", "Administrador consulta feedbacks e marca como lido", "Lista com cliente, médias por assunto e contagem de não lidos atualizada.", "xUnit + navegador", "Aprovado"],
 ], [700, 2350, 3226, 1600, 1150]));
 c.push(gap());
-c.push(P("Resumo da execução automatizada: **47 testes, 47 aprovados** — 25 unitários (cálculo do total, preço copiado no momento da compra, baixa de estoque, transições de status, validações do pedido, hash de senha) e 22 de integração (todos os casos acima, além de login/logout, validação de cadastro, gestão de produtos e páginas do front-end)."));
+c.push(P("Resumo da última execução automatizada (12/11/2026): **62 testes, 62 aprovados** — 31 unitários (cálculo do total, preço copiado no momento da compra, baixa de estoque, transições de status, validações do pedido e do feedback, hash de senha) e 31 de integração (todos os casos acima, além de login/logout, validação de cadastro, gestão de produtos e páginas do front-end)."));
 c.push(H2("16.1 Defeitos encontrados e corrigidos durante o desenvolvimento"));
 c.push(table(["#", "Defeito", "Como foi encontrado", "Correção"], [
   ["1", "Login e cadastro retornavam erro 500: as regras de validação estavam em records, formato não aceito pelo ASP.NET.", "Teste manual da API", "Modelos de entrada convertidos em classes com atributos de validação."],
   ["2", "Mensagens de erro com acentos apareciam codificadas (\\u00E7).", "Teste manual da API", "Serialização JSON configurada para manter os acentos."],
   ["3", "Janela de cadastro de produto abria no canto da tela.", "Teste no navegador (captura de tela)", "Centralização da janela restaurada no CSS."],
   ["4", "Quando a API era iniciada pelos testes, os endereços da API respondiam 404.", "Testes automatizados", "Registro explícito do assembly dos controladores."],
+  ["5", "Média dos feedbacks aparecia como \"4\" em vez de \"4,0\" no painel.", "Teste no navegador (captura de tela)", "Formatação com uma casa decimal."],
 ], [400, 3426, 2300, 2900]));
 
 // 17
 c.push(H1("17. Implementação (Situação-problema 2)"));
 c.push(H2("17.1 Estrutura do repositório"));
 c.push(table(["Pasta / arquivo", "Conteúdo"], [
-  ["database/", "01_schema.sql (tabelas e restrições) e 02_seed.sql (carga inicial)."],
+  ["database/", "01_schema.sql (tabelas e restrições), 02_seed.sql (carga inicial) e 03_feedback.sql (feedback)."],
   ["src/Cupcakes.Api/Models", "Entidades e regras de negócio (Usuario, Categoria, Produto, Pedido, ItemPedido, FluxoStatus)."],
   ["src/Cupcakes.Api/Data", "Repositórios com SQL parametrizado e criação automática do banco."],
   ["src/Cupcakes.Api/Services", "Serviços: pedidos (transação, estoque, total), senhas e mapeamento para DTOs."],
@@ -347,6 +365,9 @@ c.push(table(["Método e rota", "Acesso", "Função"], [
   ["PATCH /api/admin/pedidos/{id}/status", "Admin", "Avança ou cancela o pedido conforme o fluxo (RF08)."],
   ["GET/POST/PUT /api/admin/produtos", "Admin", "Lista, cadastra e altera produtos (RF07)."],
   ["PATCH /api/admin/produtos/{id}/ativo", "Admin", "Ativa ou desativa um produto (RF07)."],
+  ["POST /api/feedbacks · GET /api/feedbacks", "Cliente", "Envia feedback e lista os já enviados (RF12)."],
+  ["GET /api/admin/feedbacks[?situacao=nao_lidos]", "Admin", "Feedbacks com resumo e médias (RF12)."],
+  ["PATCH /api/admin/feedbacks/{id}/lido", "Admin", "Marca como lido ou não lido (RF12)."],
 ], [3500, 1100, W - 4600]));
 c.push(gap());
 c.push(H2("17.3 Como executar"));
@@ -360,10 +381,12 @@ c.push(...img(D("telas/composto-cliente-1.png"), 600, "Figura 6 – Catálogo, d
 c.push(...img(D("telas/composto-cliente-2.png"), 600, "Figura 7 – Pedido confirmado, meus pedidos, status atualizado e validação do cadastro"));
 c.push(...img(D("telas/10-admin-pedidos.png"), 600, "Figura 8 – Painel do administrador: pedidos em aberto"));
 c.push(...img(D("telas/12-admin-produtos.png"), 600, "Figura 9 – Painel do administrador: produtos"));
+c.push(...img(D("telas/composto-feedback.png"), 600, "Figura 10 – Feedback: botão no pedido, validação, formulário preenchido e confirmação"));
+c.push(...img(D("telas/20-admin-feedbacks.png"), 600, "Figura 11 – Painel do administrador: feedbacks e médias"));
 
 // 18
 c.push(H1("18. Resultado e próximos passos"));
-c.push(P("As Situações-problema 1 e 2 foram concluídas: a documentação está coerente com o código, a aplicação implementa todos os requisitos funcionais (RF01 a RF11) e os 14 casos de teste foram aprovados. O próximo passo é:"));
+c.push(P("As Situações-problema 1 e 2 foram concluídas: a documentação está coerente com o código, a aplicação implementa todos os requisitos funcionais (RF01 a RF12) e os 17 casos de teste foram aprovados. O próximo passo é:"));
 c.push(N("Situação-problema 3: publicar a aplicação, pedir a cinco pessoas que a avaliem, registrar erros e melhorias, gerar o PDF das avaliações e gravar o vídeo de demonstração.", "num2"));
 
 // 19

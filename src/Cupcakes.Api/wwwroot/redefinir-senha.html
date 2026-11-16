@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Criar nova senha · Cupcakes Gourmet</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <main>
+    <form id="form" novalidate>
+      <div id="alerta"></div>
+      <div class="campo" data-campo="novaSenha">
+        <label for="nova">Nova senha</label>
+        <input id="nova" name="nova" type="password" autocomplete="new-password" minlength="6" required>
+        <div class="dica">Mínimo de 6 caracteres.</div>
+        <div class="erro"></div>
+      </div>
+      <div class="campo" data-campo="confirmacao">
+        <label for="confirmacao">Confirme a nova senha</label>
+        <input id="confirmacao" name="confirmacao" type="password" autocomplete="new-password" required>
+        <div class="erro"></div>
+      </div>
+      <button class="btn" type="submit">Salvar nova senha</button>
+    </form>
+  </main>
+</div>
+<script src="js/core.js"></script>
+<script>
+  // Laudo, item 3: cria a nova senha a partir do link recebido.
+  montarLayout({ titulo: "Criar nova senha", voltar: "login.html", nav: "perfil" });
+  const codigo = params.get("codigo") || "";
+  if (!codigo) {
+    $("main").innerHTML = `<div class="aviso erro" role="alert">Link de redefinição inválido.</div>
+      <a class="btn" href="esqueci-senha.html">Pedir um novo link</a>`;
+  }
+  $("#form")?.addEventListener("submit", async e => {
+    e.preventDefault();
+    const f = e.target; limparErros(f); $("#alerta").innerHTML = "";
+    let ok = true;
+    if (f.nova.value.length < 6) { marcarCampo(f, "novaSenha", "A senha deve ter pelo menos 6 caracteres."); ok = false; }
+    if (f.confirmacao.value !== f.nova.value) { marcarCampo(f, "confirmacao", "As senhas não conferem."); ok = false; }
+    if (!ok) return;
+    const b = $("button[type=submit]", f); b.disabled = true; b.textContent = "Salvando…";
+    try {
+      await api("auth/redefinir-senha", { metodo: "POST", corpo: { codigo, novaSenha: f.nova.value } });
+      Sessao.limpar();
+      location.replace("login.html?redefinida=1");
+    } catch (err) {
+      if (!mostrarErros(f, err))
+        $("#alerta").innerHTML = `<div class="aviso erro" role="alert">${esc(err.message)} <a class="link" href="esqueci-senha.html">Pedir novo link</a></div>`;
+      b.disabled = false; b.textContent = "Salvar nova senha";
+    }
+  });
+</script>
+</body>
+</html>

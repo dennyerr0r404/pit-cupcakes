@@ -12,6 +12,9 @@
 --   * O valor total e os subtotais são calculados no servidor (RNF04).
 -- =====================================================================
 
+DROP TABLE IF EXISTS produto_imagem    CASCADE;
+DROP TABLE IF EXISTS redefinicao_senha CASCADE;
+DROP TABLE IF EXISTS feedback    CASCADE;
 DROP TABLE IF EXISTS item_pedido CASCADE;
 DROP TABLE IF EXISTS pedido      CASCADE;
 DROP TABLE IF EXISTS produto     CASCADE;

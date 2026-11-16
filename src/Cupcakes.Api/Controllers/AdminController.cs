@@ -7,11 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Cupcakes.Api.Controllers;
 
-/// <summary>Área administrativa: produtos (RF07) e pedidos (RF08). Exige perfil ADMIN (RNF02).</summary>
+/// <summary>Área administrativa: produtos e fotos (RF07), pedidos (RF08) e feedbacks (RF12). Exige perfil ADMIN (RNF02).</summary>
 [ApiController]
 [Authorize(Roles = "ADMIN")]
 [Route("api/admin")]
-public class AdminController(ProdutoRepositorio produtos, PedidoService pedidos) : ControllerBase
+public class AdminController(ProdutoRepositorio produtos, PedidoService pedidos, FeedbackRepositorio feedbacks) : ControllerBase
 {
     // ---------------- Pedidos ----------------
 
@@ -22,6 +22,27 @@ public class AdminController(ProdutoRepositorio produtos, PedidoService pedidos)
     [HttpPatch("pedidos/{id:int}/status")]
     public async Task<PedidoDto> AtualizarStatus(int id, AtualizarStatusRequest req, CancellationToken ct) =>
         (await pedidos.AtualizarStatusAsync(id, req.Status, ct)).ToDto(incluirCliente: true);
+
+    // ---------------- Feedbacks (RF12) ----------------
+
+    /// <summary>situacao: "nao_lidos" ou vazio (todos). Inclui o resumo com as médias.</summary>
+    [HttpGet("feedbacks")]
+    public async Task<PainelFeedbackDto> Feedbacks([FromQuery] string? situacao, CancellationToken ct)
+    {
+        var (total, naoLidos, mediaProduto, mediaAtendimento) = await feedbacks.ResumoAsync(ct);
+        var itens = await feedbacks.ListarParaAdminAsync(situacao, ct);
+        return new PainelFeedbackDto(
+            new ResumoFeedbackDto(total, naoLidos, mediaProduto, mediaAtendimento),
+            itens.Select(f => f.ToDto(incluirCliente: true)).ToList());
+    }
+
+    [HttpPatch("feedbacks/{id:int}/lido")]
+    public async Task<FeedbackDto> MarcarLido(int id, LidoRequest req, CancellationToken ct)
+    {
+        if (!await feedbacks.DefinirLidoAsync(id, req.Lido, ct))
+            throw new RegraNegocioException("Feedback não encontrado.", 404);
+        return (await feedbacks.BuscarAsync(id, ct))!.ToDto(incluirCliente: true);
+    }
 
     // ---------------- Produtos ----------------
 
@@ -52,7 +73,48 @@ public class AdminController(ProdutoRepositorio produtos, PedidoService pedidos)
         var produto = await Buscar(id, ct);
         await Preencher(produto, req, ct);
         await produtos.AtualizarAsync(produto, ct);
+        // Se o administrador trocou a foto enviada por uma ilustração ou URL, apaga a foto antiga.
+        if (produto.ImagemUrl is null || !produto.ImagemUrl.StartsWith(ProdutoRepositorio.UrlImagem(id)))
+            await produtos.RemoverImagemAsync(id, ct);
         return (await Buscar(id, ct)).ToDto();
+    }
+
+    /// <summary>
+    /// Laudo, item 7: envio da foto do produto pelo computador (JPG, PNG ou WebP, até 2 MB).
+    /// O tipo é conferido pelo conteúdo do arquivo, não pelo nome ou pelo que o navegador informa.
+    /// </summary>
+    [HttpPost("produtos/{id:int}/imagem")]
+    [RequestSizeLimit(3 * 1024 * 1024)]
+    public async Task<ProdutoDto> EnviarImagem(int id, IFormFile? arquivo, CancellationToken ct)
+    {
+        await Buscar(id, ct);
+        if (arquivo is null || arquivo.Length == 0)
+            throw new CampoInvalidoException("arquivo", "Escolha uma foto para enviar.");
+        if (arquivo.Length > TamanhoMaximoImagem)
+            throw new CampoInvalidoException("arquivo", "A foto deve ter no máximo 2 MB.");
+
+        using var ms = new MemoryStream();
+        await arquivo.CopyToAsync(ms, ct);
+        var bytes = ms.ToArray();
+        var tipo = DetectarTipoImagem(bytes)
+                   ?? throw new CampoInvalidoException("arquivo", "Formato não aceito. Envie uma foto JPG, PNG ou WebP.");
+
+        await produtos.SalvarImagemAsync(id, bytes, tipo, ct);
+        return (await Buscar(id, ct)).ToDto();
+    }
+
+    public const int TamanhoMaximoImagem = 2 * 1024 * 1024;
+
+    /// <summary>Identifica JPG, PNG ou WebP pelos primeiros bytes do arquivo ("assinatura").</summary>
+    internal static string? DetectarTipoImagem(byte[] b)
+    {
+        if (b.Length >= 3 && b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF)
+            return "image/jpeg";
+        if (b.Length >= 8 && b.AsSpan(0, 8).SequenceEqual(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }))
+            return "image/png";
+        if (b.Length >= 12 && b.AsSpan(0, 4).SequenceEqual("RIFF"u8) && b.AsSpan(8, 4).SequenceEqual("WEBP"u8))
+            return "image/webp";
+        return null;
     }
 
     /// <summary>Ativa ou desativa. Produtos não são excluídos para preservar o histórico de pedidos.</summary>
@@ -71,6 +133,9 @@ public class AdminController(ProdutoRepositorio produtos, PedidoService pedidos)
     {
         if (!await produtos.CategoriaExisteAsync(req.CategoriaId, ct))
             throw new RegraNegocioException("Selecione uma categoria válida.");
+        // Laudo, item 6: não permite dois produtos com o mesmo nome.
+        if (await produtos.NomeExisteAsync(req.Nome, p.IdProduto == 0 ? null : p.IdProduto, ct))
+            throw new CampoInvalidoException("nome", "Já existe um produto com este nome.", 409);
         p.Nome = req.Nome.Trim();
         p.Descricao = string.IsNullOrWhiteSpace(req.Descricao) ? null : req.Descricao.Trim();
         p.Preco = decimal.Round(req.Preco, 2);

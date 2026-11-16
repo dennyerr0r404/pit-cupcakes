@@ -54,4 +54,10 @@ public static class Mapeamento
             incluirCliente ? p.TelefoneCliente : null,
             incluirCliente ? FluxoStatus.Proximos(p).Select(s => s.Codigo()).ToList() : []);
     }
+
+    public static FeedbackDto ToDto(this Feedback f, bool incluirCliente = false) => new(
+        f.IdFeedback, f.Assunto.Codigo(), f.Nota, f.Comentario, f.DataEnvio, f.Lido,
+        f.IdPedido, f.IdProduto, f.NomeProduto,
+        incluirCliente ? f.NomeCliente : null,
+        incluirCliente ? f.EmailCliente : null);
 }

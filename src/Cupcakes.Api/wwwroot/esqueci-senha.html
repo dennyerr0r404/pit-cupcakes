@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Esqueci minha senha · Cupcakes Gourmet</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="app">
+  <main>
+    <p class="nota" style="margin-bottom:16px">Informe o e-mail da sua conta para criar uma nova senha.</p>
+    <form id="form" novalidate>
+      <div id="alerta"></div>
+      <div class="campo" data-campo="email">
+        <label for="email">E-mail</label>
+        <input id="email" name="email" type="email" autocomplete="email" required>
+        <div class="erro"></div>
+      </div>
+      <button class="btn" type="submit">Continuar</button>
+      <p class="form-rodape">Lembrou a senha? <a class="link" href="login.html">Entrar</a></p>
+    </form>
+    <section id="resultado" hidden></section>
+  </main>
+</div>
+<script src="js/core.js"></script>
+<script>
+  // Laudo, item 3: recuperação de senha.
+  montarLayout({ titulo: "Esqueci minha senha", voltar: "login.html", nav: "perfil" });
+  $("#form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const f = e.target; limparErros(f); $("#alerta").innerHTML = "";
+    const email = f.email.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { marcarCampo(f, "email", "Informe um e-mail válido."); return; }
+    const b = $("button[type=submit]", f); b.disabled = true; b.textContent = "Aguarde…";
+    try {
+      const r = await api("auth/esqueci-senha", { metodo: "POST", corpo: { email } });
+      f.hidden = true;
+      $("#resultado").hidden = false;
+      $("#resultado").innerHTML = r.link
+        ? `<div class="aviso ok" role="status">✓ ${esc(r.mensagem)}</div>
+           <p class="nota" style="margin-bottom:14px">Modo demonstração: o link aparece aqui em vez de ser enviado por e-mail.</p>
+           <a class="btn" id="linkRedefinir" href="${esc(r.link)}">Criar nova senha</a>`
+        : `<div class="aviso ok" role="status">${esc(r.mensagem)}</div><a class="btn sec" href="login.html">Voltar ao login</a>`;
+    } catch (err) {
+      if (!mostrarErros(f, err)) $("#alerta").innerHTML = `<div class="aviso erro" role="alert">${esc(err.message)}</div>`;
+    } finally { b.disabled = false; b.textContent = "Continuar"; }
+  });
+</script>
+</body>
+</html>

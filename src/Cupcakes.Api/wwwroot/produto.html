@@ -9,7 +9,7 @@
 </head>
 <body>
 <div class="app">
-  <main id="conteudo"><div class="carregando">Carregando…</div></main>
+  <main id="conteudo" class="det-produto"><div class="carregando">Carregando…</div></main>
 </div>
 <script src="js/core.js"></script>
 <script>
@@ -37,6 +37,7 @@
     <p class="disp ${p.disponivel ? "ok" : "nao"}">${p.disponivel
       ? `● Disponível · ${p.quantidadeEstoque} unidade(s)` : "● Esgotado no momento"}</p>
     ${noCarrinho ? `<p class="dica">Você já tem ${noCarrinho} no carrinho.</p>` : ""}
+    <a class="link link-feedback" href="feedback.html?produto=${p.id}">★ Avaliar este produto</a>
     <div class="det-compra">
       <span class="preco">${moeda(p.preco)}</span>
       <div class="qtd" aria-label="Quantidade">

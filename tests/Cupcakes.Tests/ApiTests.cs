@@ -312,7 +312,7 @@ public class ApiTests(ApiFixture api) : IClassFixture<ApiFixture>
     public async Task FrontEnd_PaginasServidas()
     {
         var http = api.NovoCliente();
-        foreach (var pagina in new[] { "/", "/produto.html", "/carrinho.html", "/finalizar.html", "/login.html", "/cadastro.html", "/pedidos.html", "/pedido.html", "/perfil.html", "/admin.html", "/js/core.js", "/css/app.css" })
+        foreach (var pagina in new[] { "/", "/produto.html", "/carrinho.html", "/finalizar.html", "/login.html", "/cadastro.html", "/pedidos.html", "/pedido.html", "/perfil.html", "/admin.html", "/feedback.html", "/editar-perfil.html", "/esqueci-senha.html", "/redefinir-senha.html", "/js/core.js", "/css/app.css" })
             Assert.Equal(HttpStatusCode.OK, (await http.GetAsync(pagina)).StatusCode);
     }
 }

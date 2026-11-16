@@ -1,7 +1,7 @@
 """Gera o diagrama de casos de uso (SVG) do sistema de cupcakes."""
 import math, sys
 
-W, H = 1200, 900
+W, H = 1200, 990
 TEAL, FILL, INK = "#3D7D7A", "#FFF7F2", "#222"
 
 ucs = {  # id: (cx, cy, rx, texto)
@@ -16,6 +16,8 @@ ucs = {  # id: (cx, cy, rx, texto)
     "log":  (420, 655, 105, ["Fazer login"]),
     "prod": (790, 745, 115, ["Gerenciar produtos"]),
     "ped":  (790, 825, 115, ["Gerenciar pedidos", "(atualizar status)"]),
+    "fb":   (420, 745, 115, ["Enviar feedback", "(produto ou atendimento)"]),
+    "fbad": (790, 905, 115, ["Consultar feedbacks"]),
 }
 RY = 32
 
@@ -39,14 +41,14 @@ out = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBo
        '<defs><marker id="seta" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse">'
        f'<path d="M0,0 L10,5 L0,10" fill="none" stroke="{INK}" stroke-width="1.6"/></marker></defs>',
        f'<rect width="{W}" height="{H}" fill="#fff"/>',
-       f'<rect x="260" y="70" width="700" height="805" fill="none" stroke="{TEAL}" stroke-width="2.5"/>',
+       f'<rect x="260" y="70" width="700" height="895" fill="none" stroke="{TEAL}" stroke-width="2.5"/>',
        f'<text x="610" y="105" text-anchor="middle" font-size="21" font-weight="bold" fill="{INK}">Sistema de Vendas de Cupcakes</text>']
 
-cli, adm = (110, 420), (1090, 760)
-for uc in ["cad", "cat", "det", "car", "fin", "sta", "log"]:
+cli, adm = (110, 440), (1090, 715)
+for uc in ["cad", "cat", "det", "car", "fin", "sta", "log", "fb"]:
     x, y = ucs[uc][0] - ucs[uc][2], ucs[uc][1]  # ponta esquerda da elipse
     out.append(f'<line x1="{cli[0]+30}" y1="{cli[1]-14}" x2="{x:.1f}" y2="{y:.1f}" stroke="{INK}" stroke-width="1.6"/>')
-for uc in ["log", "prod", "ped"]:
+for uc in ["log", "prod", "ped", "fbad"]:
     x, y = ucs[uc][0] + ucs[uc][2], ucs[uc][1]  # ponta direita da elipse
     out.append(f'<line x1="{adm[0]-30}" y1="{adm[1]-14}" x2="{x:.1f}" y2="{y:.1f}" stroke="{INK}" stroke-width="1.6"/>')
 

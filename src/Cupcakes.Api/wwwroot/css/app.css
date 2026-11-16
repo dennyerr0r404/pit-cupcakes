@@ -207,3 +207,85 @@ dialog h2 { font-size: 19px; margin-bottom: 14px; }
 @media (max-width: 640px) {
   .tabela .col-opc { display: none; }
 }
+
+/* ---------- Feedback ---------- */
+.estrelas { display: flex; align-items: center; gap: 4px; }
+.estrelas label { cursor: pointer; font-size: 36px; line-height: 1; color: #D8D2CC; transition: color .1s, transform .1s; position: relative; }
+.estrelas input { position: absolute; opacity: 0; pointer-events: none; }
+.estrelas label.acesa { color: #F2B01E; }
+.estrelas label:hover { transform: scale(1.12); }
+.estrelas label:has(input:focus-visible) { outline: 3px solid rgba(47,143,139,.55); border-radius: 6px; }
+.estrelas .rotulo-nota { margin-left: 10px; font-size: 14px; font-weight: bold; color: var(--muted); }
+.campo.invalido .estrelas label:not(.acesa) { color: #EBC3BF; }
+.nota-estrelas { color: #F2B01E; font-size: 17px; letter-spacing: 1px; white-space: nowrap; }
+.nota-estrelas .apagadas { color: #D8D2CC; }
+.feedback-card { background: #fff; border-radius: 12px; padding: 12px; margin-bottom: 10px; box-shadow: var(--shadow); font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+.feedback-card .h { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.feedback-card .texto { font-size: 14px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.feedback-card .m { color: var(--muted); line-height: 1.45; }
+.feedback-card.nao-lido { border-left: 4px solid var(--teal); }
+.resumo-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.resumo-cards div { background: #fff; border-radius: 12px; padding: 12px; box-shadow: var(--shadow); }
+.resumo-cards b { display: block; font-size: 22px; margin-top: 2px; }
+.resumo-cards span { font-size: 12px; color: var(--muted); }
+.cont-aba { background: var(--err); color: #fff; border-radius: 10px; font-size: 11px; padding: 1px 6px; margin-left: 4px; }
+.cont-aba:empty { display: none; }
+.link-feedback { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 14px; }
+
+/* ---------- Formulários novos (perfil, senha, foto) ---------- */
+.titulo-secao { font-size: 17px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.campo input:disabled { background: #F3EEE9; color: var(--muted); }
+.imagem-produto { display: flex; gap: 12px; align-items: center; }
+.preview-imagem { width: 72px; height: 72px; flex: none; background: var(--img-bg); border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.preview-imagem img { width: 100%; height: 100%; object-fit: cover; }
+.campo label.botao-arquivo { display: inline-flex; width: auto; cursor: pointer; margin-bottom: 6px; font-size: 14px; }
+.card .img img[src^="/api/"], .item .img img[src^="/api/"], .foto img[src^="/api/"], .mini img[src^="/api/"] { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+
+/* =========================================================
+   Laudo, item 1 — layout para telas largas (tablet deitado e computador).
+   O celular continua com o layout original de uma coluna.
+   ========================================================= */
+@media (min-width: 768px) {
+  body { background: #E9F1F0; }
+  .app:not(.largo) { max-width: 1180px; box-shadow: 0 0 30px rgba(0,0,0,.08); }
+
+  /* Barra de navegação vira menu no topo, com o nome da loja à esquerda */
+  .nav { position: sticky; top: 0; left: auto; transform: none; max-width: none; order: -2;
+         height: 64px; justify-content: flex-end; gap: 6px; padding: 0 28px;
+         border-top: none; border-bottom: 1px solid var(--line); }
+  .nav::before { content: "🧁 Cupcakes Gourmet"; margin-right: auto; font-weight: bold; font-size: 20px; color: var(--teal-dk); }
+  .nav a { flex-direction: row; gap: 8px; font-size: 15px; padding: 8px 14px; border-radius: 22px; min-width: 0; }
+  .nav a:hover { background: var(--cream); }
+  .nav a.ativo { background: var(--teal-lt); }
+  .nav a svg { width: 20px; height: 20px; }
+  .nav .badge { position: static; margin-left: -2px; }
+  .app.com-nav main { padding-bottom: 32px; }
+  .topo { position: static; order: -1; }
+
+  /* Conteúdo centralizado com largura confortável de leitura */
+  main { width: 100%; max-width: 760px; margin: 0 auto; padding: 24px 28px; }
+  main.main-larga { max-width: none; }
+
+  /* Catálogo em grade de várias colunas */
+  .banner { padding: 30px; }
+  .banner h2 { font-size: 30px; }
+  .banner p { font-size: 15px; }
+  .abas { margin: 22px 0 16px; }
+  .grade { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 18px; }
+  .card { padding: 10px; transition: transform .15s, box-shadow .15s; }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.10); }
+  .card .nome { font-size: 15px; }
+
+  /* Detalhe do produto em duas colunas: foto à esquerda, informações à direita */
+  main.det-produto { max-width: 1000px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 36px; align-content: start; }
+  main.det-produto > * { grid-column: 2; }
+  main.det-produto > .foto { grid-column: 1; grid-row: 1 / span 20; align-self: start; position: sticky; top: 90px; }
+  main.det-produto > .aviso, main.det-produto > .vazio, main.det-produto > .carregando { grid-column: 1 / -1; }
+  main.det-produto .det-titulo { margin-top: 0; }
+
+  /* Listas de pedidos e feedbacks em duas colunas */
+  #conteudo:has(> .pedido-card) { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-content: start; }
+  #conteudo > .pedido-card { margin-bottom: 0; }
+
+  .toast { bottom: 28px; }
+}
